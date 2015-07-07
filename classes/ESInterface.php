@@ -17,6 +17,8 @@ class ESInterface {
         $this->client = new Elasticsearch\Client();
 
         $params = array('index' => self::$index);
+        $this->client->indices()->create($params);
+
         if (!$this->client->indices()->get($params)) {
             $this->client->indices()->create($params);
         }
@@ -34,11 +36,29 @@ class ESInterface {
         $params = array();
         $params['index'] = self::$index;
 
-        if (count($types > 0)) {
-            $params['type'] = $types;
+        $params['body']['query']['bool']['must'] = array();
+        
+        $type = get_input('entity_type');
+        if ($type) {
+            $params['body']['query']['bool']['must'][] = array(
+                'term' => array('type' => $type)
+            );
+        }
+        
+        $subtype = get_input('entity_subtype');
+        if ($subtype) {
+            $params['body']['query']['bool']['must'][] = array(
+                'term' => array('subtype' => get_subtype_id($type, $subtype))
+            );
         }
 
-        $params['body']['query']['query_string']['query'] = $query;
+        $params['body']['query']['bool']['must'][] = array(
+            'query_string' => array('query' => $query)
+        );
+
+        $params['body']['query']['bool']['must'][] = array(
+            'terms' => array('access_id' => get_access_array())
+        );
 
         $results = $this->client->search($params);
 
@@ -81,7 +101,13 @@ class ESInterface {
         $params['type'] = $object->type;
         $params['id'] = $object->guid;
 
-        return $this->client->delete($params);
+        try {
+            $this->client->delete($params);
+        } catch (Exception $exception) {
+
+        }
+
+        return true;
     }
 
     public function enable($object) {
@@ -91,4 +117,35 @@ class ESInterface {
     public function disable($object) {
         return $this->delete($object);
     }
+
+    public function bulk(array $objects) {
+        $params = array();
+        $params['body'] = array();
+
+        foreach ($objects as $object) {
+            $params['body'][] =  array(
+                'index' => array(
+                    '_id' => $object->guid,
+                    '_index' => self::$index,
+                    '_type' => $object->type
+                )
+            );
+
+            $values = array();
+            foreach ($object->getExportableValues() as $key) {
+                $values[$key] = $object->$key;
+            }
+
+            $values['access_id'] = $object->access_id;
+
+            if ($values['description']) {
+                $values['description'] = elgg_strip_tags($values['description']);
+            }
+
+            $params['body'][] = $values;
+        }
+
+        return $this->client->bulk($params);        
+    }
+
 }

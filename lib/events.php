@@ -1,6 +1,12 @@
 <?php
 
 function elasticsearch_create_event($event, $object_type, $object) {
+    if ($object->type == 'annotation') {
+        if ($object->name == 'view_counter') {
+            return true;
+        }
+    }
+    
     return ESInterface::get()->update($object);
 }
 

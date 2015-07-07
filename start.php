@@ -1,11 +1,14 @@
 <?php
 
 require_once(dirname(__FILE__) . "/../../vendor/autoload.php");
+require_once(dirname(__FILE__) . "/lib/functions.php");
 require_once(dirname(__FILE__) . "/lib/events.php");
 
 function elasticsearch_init() {
     elgg_register_page_handler('search', 'elasticsearch_search_page_handler');
     elgg_register_page_handler('search_advanced', 'elasticsearch_search_page_handler');
+
+    elgg_register_action('elasticsearch/sync', dirname(__FILE__) . '/actions/sync.php', 'admin');
 
     elgg_register_event_handler('create', 'user', 'elasticsearch_create_event');
     elgg_register_event_handler('create', 'group', 'elasticsearch_create_event');

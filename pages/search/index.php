@@ -92,7 +92,16 @@ $body = "";
 $body .= "<h2>" . elgg_echo('elasticsearch:nr_results', array($results['total'], "\"$display_query\"")) . "</h2>";
 
 foreach ($results['hits'] as $result) {
+    $body .= elgg_view_entity($result);
+    
+    /*if () {
+        $results_html .= elgg_view($view, array(
+            'results' => $results,
+            'params' => $current_params,
+        ));
+    }
     $body .= print_r($result, true) . "<br /><br />";
+    */
 }
 
 if(elgg_is_xhr()){
