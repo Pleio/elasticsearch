@@ -15,9 +15,10 @@ class ESInterface {
 
     protected function __construct() {
         $this->client = new Elasticsearch\Client();
+        $this->filter = new ESFilter();
 
         $params = array('index' => self::$index);
-        $this->client->indices()->create($params);
+        //$this->client->indices()->create($params);
 
         if (!$this->client->indices()->get($params)) {
             $this->client->indices()->create($params);
@@ -37,14 +38,14 @@ class ESInterface {
         $params['index'] = self::$index;
 
         $params['body']['query']['bool']['must'] = array();
-        
+
         $type = get_input('entity_type');
         if ($type) {
             $params['body']['query']['bool']['must'][] = array(
                 'term' => array('type' => $type)
             );
         }
-        
+
         $subtype = get_input('entity_subtype');
         if ($subtype) {
             $params['body']['query']['bool']['must'][] = array(
@@ -80,8 +81,11 @@ class ESInterface {
     }
 
     public function update($object) {
+        if (!$this->filter($object)) {
+            return true;
+        }
+
         $params = array();
-        
         $params['index'] = self::$index;
         $params['type'] = $object->type;
         $params['id'] = $object->guid;
@@ -96,6 +100,10 @@ class ESInterface {
     }
 
     public function delete($object) {
+        if (!$this->filter($object)) {
+            return true;
+        }
+
         $params = array();
         $params['index'] = self::$index;
         $params['type'] = $object->type;
@@ -111,10 +119,18 @@ class ESInterface {
     }
 
     public function enable($object) {
+        if (!$this->filter($object)) {
+            return true;
+        }
+
         return $this->update($object);
     }
 
     public function disable($object) {
+        if (!$this->filter($object)) {
+            return true;
+        }
+
         return $this->delete($object);
     }
 
@@ -123,6 +139,10 @@ class ESInterface {
         $params['body'] = array();
 
         foreach ($objects as $object) {
+            if (!$this->filter($object)) {
+                return true;
+            }
+
             $params['body'][] =  array(
                 'index' => array(
                     '_id' => $object->guid,
@@ -145,7 +165,7 @@ class ESInterface {
             $params['body'][] = $values;
         }
 
-        return $this->client->bulk($params);        
+        return $this->client->bulk($params);
     }
 
 }

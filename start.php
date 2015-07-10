@@ -26,7 +26,7 @@ function elasticsearch_init() {
     elgg_register_event_handler('delete', 'group', 'elasticsearch_delete_event');
     elgg_register_event_handler('delete', 'object', 'elasticsearch_delete_event');
     elgg_register_event_handler('delete', 'site', 'elasticsearch_delete_event');
-    elgg_register_event_handler('delete', 'annotation', 'elasticsearch_delete_event');    
+    elgg_register_event_handler('delete', 'annotation', 'elasticsearch_delete_event');
 
     elgg_register_event_handler('enable', 'user', 'elasticsearch_enable_event');
     elgg_register_event_handler('enable', 'group', 'elasticsearch_enable_event');
