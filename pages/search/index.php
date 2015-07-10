@@ -27,12 +27,12 @@ $display_query = htmlspecialchars($display_query, ENT_QUOTES, 'UTF-8', false);
 // check that we have an actual query
 if (!$query && !((count($profile_filter) > 0) && $entity_type == "user")) {
     $title = sprintf(elgg_echo('search:results'), "\"$display_query\"");
-    
+
     $body  = elgg_view_title(elgg_echo('search:search_error'));
     if(!elgg_is_xhr()){
         $body .= elgg_view_form("search_advanced/search", array("action" => "search", "method" => "GET", "disable_security" => true), array());
     }
-    
+
     $body .= elgg_echo('search:no_query');
     if(!elgg_is_xhr()){
         $layout = elgg_view_layout('one_sidebar', array('content' => $body));
@@ -46,6 +46,7 @@ $entity_subtype = get_input('entity_subtype', ELGG_ENTITIES_ANY_VALUE);
 $owner_guid = get_input('owner_guid', ELGG_ENTITIES_ANY_VALUE);
 $container_guid = get_input('container_guid', ELGG_ENTITIES_ANY_VALUE);
 $friends = get_input('friends', ELGG_ENTITIES_ANY_VALUE);
+
 $sort = get_input('sort');
 switch ($sort) {
     case 'relevance':
@@ -65,43 +66,96 @@ if ($order != 'asc' && $order != 'desc') {
     $order = 'desc';
 }
 
-// set up search params
-$params = array(
-    'query' => $query,
-    'offset' => $offset,
-    'limit' => $limit,
-    'sort' => $sort,
-    'order' => $order,
-    'search_type' => $search_type,
-    'type' => $entity_type,
-    'subtype' => $entity_subtype,
-//  'tag_type' => $tag_type,
-    'owner_guid' => $owner_guid,
-    'container_guid' => $container_guid,
-//  'friends' => $friends
-    'pagination' => ($search_type == 'all') ? FALSE : TRUE,
-    'profile_filter' => $profile_filter,
-);
+$limit = get_input('limit', 10);
+if ($limit > 50 | $limit < 1) {
+    $limit = 10;
+}
 
-$types = get_registered_entity_types();
-$types['object'] = array_merge($types['object'], elgg_trigger_plugin_hook('search_types', 'get_types', $params, array()));
+$offset = get_input('offset', 0);
 
-$results = ESInterface::get()->search($query);
+$results = ESInterface::get()->search($query, $types, $subtypes, $limit, $offset, $sort, $order);
 
 $body = "";
-$body .= "<h2>" . elgg_echo('elasticsearch:nr_results', array($results['total'], "\"$display_query\"")) . "</h2>";
+$body .= "<h2>" . elgg_echo('elasticsearch:nr_results', array($results['count'], "\"$display_query\"")) . "</h2>";
 
-foreach ($results['hits'] as $result) {
-    $body .= elgg_view_entity($result);
-    
-    /*if () {
-        $results_html .= elgg_view($view, array(
-            'results' => $results,
-            'params' => $current_params,
-        ));
+$body .= elgg_view('search/list', array(
+    'results' => $results,
+    'params' => array(
+        'limit' => $limit,
+        'offset' => $offset
+    )
+));
+
+$data = htmlspecialchars(http_build_query(array(
+    'q' => $query,
+    'search_type' => 'all'
+)));
+$url = elgg_get_site_url() . "search?$data";
+$menu_item = new ElggMenuItem('all', elgg_echo('all'), $url);
+elgg_register_menu_item('page', $menu_item);
+
+$types = get_registered_entity_types();
+$custom_types = elgg_trigger_plugin_hook('search_types', 'get_types', $params, array());
+
+foreach ($types as $type => $subtypes) {
+    // @todo when using index table, can include result counts on each of these.
+    if (is_array($subtypes) && count($subtypes)) {
+        foreach ($subtypes as $subtype) {
+            $label = "item:$type:$subtype";
+
+            $data = htmlspecialchars(http_build_query(array(
+                'q' => $query,
+                'entity_subtype' => $subtype,
+                'entity_type' => $type,
+                'owner_guid' => $owner_guid,
+                'search_type' => 'entities'
+            )));
+
+            $url = elgg_get_site_url()."search?$data";
+
+            $caption = elgg_echo($label);
+            if (array_key_exists($subtype, $results['count_per_subtype'])) {
+                $caption .= " <span class='elgg-quiet'>[" . $results['count_per_subtype'][$subtype] . "]</span>";
+            }
+
+            $menu_item = new ElggMenuItem($label, $caption, $url);
+            elgg_register_menu_item('page', $menu_item);
+        }
+    } else {
+        $label = "item:$type";
+
+        $data = htmlspecialchars(http_build_query(array(
+            'q' => $query,
+            'entity_type' => $type,
+            'owner_guid' => $owner_guid,
+            'search_type' => 'entities'
+        )));
+
+        $url = elgg_get_site_url() . "search?$data";
+
+        $caption = elgg_echo($label);
+        if (array_key_exists($type, $results['count_per_type'])) {
+            $caption .= " <span class='elgg-quiet'>[" . $results['count_per_type'][$type] . "]</span>";
+        }
+
+        $menu_item = new ElggMenuItem($label, $caption, $url);
+        elgg_register_menu_item('page', $menu_item);
     }
-    $body .= print_r($result, true) . "<br /><br />";
-    */
+}
+
+// add sidebar for custom searches
+foreach ($custom_types as $type) {
+    $label = "search_types:$type";
+
+    $data = htmlspecialchars(http_build_query(array(
+        'q' => $query,
+        'search_type' => $type,
+    )));
+
+    $url = elgg_get_site_url()."search?$data";
+
+    $menu_item = new ElggMenuItem($label, elgg_echo($label), $url);
+    elgg_register_menu_item('page', $menu_item);
 }
 
 if(elgg_is_xhr()){
@@ -109,6 +163,6 @@ if(elgg_is_xhr()){
 } else {
     $title = elgg_echo('elasticsearch:results', array("\"$display_query\""));
     $content = elgg_view_layout('two_column_left_sidebar', array('content' => $body));
-    
+
     echo elgg_view_page($title, $content);
 }

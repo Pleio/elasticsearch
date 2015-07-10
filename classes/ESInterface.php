@@ -14,30 +14,38 @@ class ESInterface {
     }
 
     protected function __construct() {
+        global $CONFIG;
         $this->client = new Elasticsearch\Client();
         $this->filter = new ESFilter();
-
-        $params = array('index' => self::$index);
-        //$this->client->indices()->create($params);
-
-        if (!$this->client->indices()->get($params)) {
-            $this->client->indices()->create($params);
-        }
     }
 
     private function __clone() {}
     private function __wakeup() {}
+
+    public function create_index() {
+        $params = array('index' => self::$index);
+        if (!$this->client->indices()->get($params)) {
+            return $this->client->indices()->create($params);
+        } else {
+            return false;
+        }
+    }
 
     public function delete_index() {
         $params = array('index' => self::$index);
         return $this->client->indices()->delete($params);
     }
 
-    public function search($query, $types = array(), $subtypes = array(), $limit = 10, $offset = 0) {
+    public function search($query, $types = array(), $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "") {
+        // @todo: implement $sort and $order
+
         $params = array();
         $params['index'] = self::$index;
 
         $params['body']['query']['bool']['must'] = array();
+        $params['body']['size'] = $limit;
+        $params['body']['from'] = $offset;
+
 
         $type = get_input('entity_type');
         if ($type) {
@@ -61,6 +69,14 @@ class ESInterface {
             'terms' => array('access_id' => get_access_array())
         );
 
+        $params['body']['facets'] = array();
+        $params['body']['facets']['type']['terms'] = array(
+            'field' => '_type'
+        );
+        $params['body']['facets']['subtype']['terms'] = array(
+            'field' => 'subtype'
+        );
+
         $results = $this->client->search($params);
 
         $hits = array();
@@ -72,16 +88,27 @@ class ESInterface {
             }
         }
 
+        $count_per_type = array();
+        foreach ($results['facets']['type']['terms'] as $type) {
+            $count_per_type[$type['term']] = $type['count'];
+        }
+
+        $count_per_subtype = array();
+        foreach ($results['facets']['subtype']['terms'] as $subtype) {
+            $key = get_subtype_from_id($subtype['term']);
+            $count_per_subtype[$key] = $subtype['count'];
+        }
+
         return array(
-            'total' => $results['hits']['total'],
-            'limit' => $limit,
-            'offset' => $offset,
+            'count' => $results['hits']['total'],
+            'count_per_type' => $count_per_type,
+            'count_per_subtype' => $count_per_subtype,
             'hits' => $hits
         );
     }
 
     public function update($object) {
-        if (!$this->filter($object)) {
+        if (!$this->filter->apply($object)) {
             return true;
         }
 
@@ -100,7 +127,7 @@ class ESInterface {
     }
 
     public function delete($object) {
-        if (!$this->filter($object)) {
+        if (!$this->filter->apply($object)) {
             return true;
         }
 
@@ -119,7 +146,7 @@ class ESInterface {
     }
 
     public function enable($object) {
-        if (!$this->filter($object)) {
+        if (!$this->filter->apply($object)) {
             return true;
         }
 
@@ -127,7 +154,7 @@ class ESInterface {
     }
 
     public function disable($object) {
-        if (!$this->filter($object)) {
+        if (!$this->filter->apply($object)) {
             return true;
         }
 
@@ -139,7 +166,7 @@ class ESInterface {
         $params['body'] = array();
 
         foreach ($objects as $object) {
-            if (!$this->filter($object)) {
+            if (!$this->filter->apply($object)) {
                 return true;
             }
 

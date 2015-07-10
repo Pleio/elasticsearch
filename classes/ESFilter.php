@@ -2,7 +2,14 @@
 
 class ESFilter {
 
-    public function filter($object) {
+    public function __construct() {
+        $types = get_registered_entity_types();
+        $custom_types = elgg_trigger_plugin_hook('search_types', 'get_types', $params, array());
+        $types['object'] = array_merge($types['object'], $custom_types);
+        $this->types = $types;
+    }
+
+    public function apply($object) {
         switch ($object->type) {
             case 'annotation':
                 return $this->filterAnnotation($object);
@@ -12,7 +19,7 @@ class ESFilter {
                 return $this->filterUser($object);
             case 'site':
                 return $this->filterSite($object);
-            case default:
+            default:
                 return $this->filterOther($object);
         }
     }
@@ -26,10 +33,12 @@ class ESFilter {
     }
 
     public function filterObject($object) {
-        if ($object->subtype == 'plugin') {
-            return false;
-        } else {
+        $subtype = get_subtype_from_id($object->subtype);
+
+        if (in_array($subtype, $this->types['object'])) {
             return $object;
+        } else {
+            return false;
         }
     }
 
@@ -42,7 +51,7 @@ class ESFilter {
     }
 
     public function filterOther($object) {
-        return $object;
+        return false;
     }
 
 }
