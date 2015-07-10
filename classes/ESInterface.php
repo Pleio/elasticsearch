@@ -15,7 +15,7 @@ class ESInterface {
 
     protected function __construct() {
         global $CONFIG;
-        $this->client = new Elasticsearch\Client();
+        $this->client = new Elasticsearch\Client($CONFIG->elasticsearch);
         $this->filter = new ESFilter();
     }
 
