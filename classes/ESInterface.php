@@ -118,6 +118,7 @@ class ESInterface {
         $params['id'] = $object->guid;
 
         $params['body'] = array();
+        $params['body']['access_id'] = $object->access_id;
 
         foreach ($object->getExportableValues() as $key) {
             $params['body'][$key] = $object->$key;
@@ -167,7 +168,7 @@ class ESInterface {
 
         foreach ($objects as $object) {
             if (!$this->filter->apply($object)) {
-                return true;
+                continue;
             }
 
             $params['body'][] =  array(
