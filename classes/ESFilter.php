@@ -17,6 +17,8 @@ class ESFilter {
                 return $this->filterObject($object);
             case 'user':
                 return $this->filterUser($object);
+            case 'group':
+                return $this->filterGroup($object);
             case 'site':
                 return $this->filterSite($object);
             default:
@@ -44,6 +46,10 @@ class ESFilter {
     }
 
     public function filterUser($object) {
+        return $object;
+    }
+
+    public function filterGroup($object) {
         return $object;
     }
 
