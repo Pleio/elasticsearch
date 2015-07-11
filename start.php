@@ -42,13 +42,14 @@ function elasticsearch_init() {
 elgg_register_event_handler("init", "system", "elasticsearch_init");
 
 function elasticsearch_search_page_handler($page) {
+    $base_dir = dirname(__FILE__) . '/pages/search';
+
     switch ($page[0]) {
         case "autocomplete":
-            // @todo: build
+            include_once("$base_dir/autocomplete.php");
             return true;
     }
 
-    $base_dir = dirname(__FILE__) . '/pages/search';
     include_once("$base_dir/index.php");
     return true;
 }
