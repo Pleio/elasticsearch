@@ -82,9 +82,13 @@ class ESInterface {
         $hits = array();
         foreach ($results['hits']['hits'] as $hit) {
             if ($hit['_type'] != 'annotation') {
-                $hits[] = get_entity($hit['_id']);
+                $object = get_entity($hit['_id']);
             } else {
-                $hits[] = elgg_get_annotation_from_id($hit['_id']);
+                $object = elgg_get_annotation_from_id($hit['_id']);
+            }
+
+            if ($object) {
+                $hits[] = $object;
             }
         }
 
