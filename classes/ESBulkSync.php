@@ -14,7 +14,6 @@ class ESBulkSync {
     }
 
     public function syncObjects() {
-        // @todo: implement
         $dblink = get_db_link('read');
         $site = elgg_get_site_entity();
 

@@ -17,6 +17,8 @@ class ESFilter {
                 return $this->filterObject($object);
             case 'user':
                 return $this->filterUser($object);
+            case 'group':
+                return $this->filterGroup($object);
             case 'site':
                 return $this->filterSite($object);
             default:
@@ -35,7 +37,8 @@ class ESFilter {
     public function filterObject($object) {
         $subtype = get_subtype_from_id($object->subtype);
 
-        if (in_array($subtype, $this->types['object'])) {
+        //if (in_array($subtype, $this->types['object'])) {
+        if (!in_array($subtype, array('messages'))) {
             return $object;
         } else {
             return false;
@@ -43,6 +46,10 @@ class ESFilter {
     }
 
     public function filterUser($object) {
+        return $object;
+    }
+
+    public function filterGroup($object) {
         return $object;
     }
 
