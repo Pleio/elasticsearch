@@ -37,6 +37,18 @@ function elasticsearch_init() {
     elgg_register_event_handler('disable', 'object', 'elasticsearch_disable_event');
     elgg_register_event_handler('disable', 'site', 'elasticsearch_disable_event');
     elgg_register_event_handler('disable', 'annotation', 'elasticsearch_disable_event');
+
+    elgg_extend_view('css/elgg', 'search/css/site');
+    elgg_extend_view('js/elgg', 'search/js/site');
+
+    elgg_extend_view('page/elements/header', 'elasticsearch/header');
+
+    elgg_register_widget_type("search", elgg_echo("search"), elgg_echo("search"), "profile,dashboard,index,groups", true);
+
+    if (function_exists('pleio_register_console_handler')) {
+        pleio_register_console_handler('es:index:reset', 'Reset the configured Elasticsearch index.', 'elasticsearch_console_index_reset');
+        pleio_register_console_handler('es:sync:all', 'Synchronise all entities to Elasticsearch.', 'elasticsearch_console_sync_all');
+    }
 }
 
 elgg_register_event_handler("init", "system", "elasticsearch_init");

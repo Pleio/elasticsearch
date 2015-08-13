@@ -10,38 +10,11 @@ $search_type = get_input('search_type', 'all');
 // @todo there is a bug in get_input that makes variables have slashes sometimes.
 // @todo is there an example query to demonstrate ^
 // XSS protection is more important that searching for HTML.
+
 $query = stripslashes(get_input('q', get_input('tag', '')));
+
 $profile_filter = get_input('search_advanced_profile_fields');
 $entity_type = get_input('entity_type', ELGG_ENTITIES_ANY_VALUE);
-
-// @todo - create function for sanitization of strings for display in 1.8
-// encode <,>,&, quotes and characters above 127
-if (function_exists('mb_convert_encoding')) {
-    $display_query = mb_convert_encoding($query, 'HTML-ENTITIES', 'UTF-8');
-} else {
-    // if no mbstring extension, we just strip characters
-    $display_query = preg_replace("/[^\x01-\x7F]/", "", $query);
-}
-$display_query = htmlspecialchars($display_query, ENT_QUOTES, 'UTF-8', false);
-
-// check that we have an actual query
-if (!$query && !((count($profile_filter) > 0) && $entity_type == "user")) {
-    $title = sprintf(elgg_echo('search:results'), "\"$display_query\"");
-
-    $body  = elgg_view_title(elgg_echo('search:search_error'));
-    if(!elgg_is_xhr()){
-        $body .= elgg_view_form("search_advanced/search", array("action" => "search", "method" => "GET", "disable_security" => true), array());
-    }
-
-    $body .= elgg_echo('search:no_query');
-    if(!elgg_is_xhr()){
-        $layout = elgg_view_layout('one_sidebar', array('content' => $body));
-        $body = elgg_view_page($title, $layout);
-    }
-    echo $body;
-    return;
-}
-
 $entity_subtype = get_input('entity_subtype', ELGG_ENTITIES_ANY_VALUE);
 $owner_guid = get_input('owner_guid', ELGG_ENTITIES_ANY_VALUE);
 $container_guid = get_input('container_guid', ELGG_ENTITIES_ANY_VALUE);
@@ -73,7 +46,81 @@ if ($limit > 50 | $limit < 1) {
 
 $offset = get_input('offset', 0);
 
-$results = ESInterface::get()->search($query, $types, $subtypes, $limit, $offset, $sort, $order);
+// @todo - create function for sanitization of strings for display in 1.8
+// encode <,>,&, quotes and characters above 127
+if (function_exists('mb_convert_encoding')) {
+    $display_query = mb_convert_encoding($query, 'HTML-ENTITIES', 'UTF-8');
+} else {
+    // if no mbstring extension, we just strip characters
+    $display_query = preg_replace("/[^\x01-\x7F]/", "", $query);
+}
+$display_query = htmlspecialchars($display_query, ENT_QUOTES, 'UTF-8', false);
+
+// check that we have an actual query
+if (!$query && !((count($profile_filter) > 0) && $entity_type == "user")) {
+    $title = sprintf(elgg_echo('search:results'), "\"$display_query\"");
+
+    $body  = elgg_view_title(elgg_echo('search:search_error'));
+    if(!elgg_is_xhr()){
+        $body .= elgg_view_form("search_advanced/search", array("action" => "search", "method" => "GET", "disable_security" => true), array());
+    }
+
+    $body .= elgg_echo('search:no_query');
+    if(!elgg_is_xhr()){
+        $layout = elgg_view_layout('one_sidebar', array('content' => $body));
+        $body = elgg_view_page($title, $layout);
+    }
+    echo $body;
+    return;
+}
+
+// @todo refactor: Not a very nice solution. Best solution would maybe be to reuse container_guid value of user in Elasticsearch.
+$container = get_entity($container_guid);
+if (isset($container) && $container instanceof ElggGroup) {
+    $results = ESInterface::get()->search($query, $types, $subtypes, 10000, 0, $sort, $order);
+
+    foreach ($results['hits'] as $key => $hit) {
+        $remove = false;
+
+        if ($hit->type == "user") {
+            if (!check_entity_relationship($hit->guid, "member", $container->guid)) {
+                $remove = true;
+            }
+        } else {
+            if ($hit->container_guid != $container->guid) {
+                $remove = true;
+            }
+        }
+
+        if ($remove === true) {
+            unset($results['hits'][$key]);
+            $results['count'] -= 1;
+            $results['count_per_type'][$hit->type] -= 1;
+
+            if ($hit->type == "object") {
+                $subtype = get_subtype_from_id($hit->subtype);
+                $results['count_per_subtype'][$subtype] -= 1;
+            }
+        }
+    }
+
+    foreach ($results['count_per_type'] as $key => $count) {
+        if ($count === 0) {
+            unset($results['count_per_type'][$key]);
+        }
+    }
+
+    foreach ($results['count_per_subtype'] as $key => $count) {
+        if ($count === 0) {
+            unset($results['count_per_subtype'][$key]);
+        }
+    }
+
+    $results['hits'] = array_slice($results['hits'], $offset, $limit);
+
+} else {
+    $results = ESInterface::get()->search($query, $types, $subtypes, $limit, $offset, $sort, $order);
+}
 
 $body = "";
 $body .= "<h2>" . elgg_echo('elasticsearch:nr_results', array($results['count'], "\"$display_query\"")) . "</h2>";

@@ -37,7 +37,7 @@ class ESFilter {
     public function filterObject($object) {
         $subtype = get_subtype_from_id($object->subtype);
 
-        //if (in_array($subtype, $this->types['object'])) {
+        // do not index message objects
         if (!in_array($subtype, array('messages'))) {
             return $object;
         } else {

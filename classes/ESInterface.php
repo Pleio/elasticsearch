@@ -99,8 +99,10 @@ class ESInterface {
 
         $count_per_subtype = array();
         foreach ($results['facets']['subtype']['terms'] as $subtype) {
-            $key = get_subtype_from_id($subtype['term']);
-            $count_per_subtype[$key] = $subtype['count'];
+            if ($subtype['term']) {
+                $key = get_subtype_from_id($subtype['term']);
+                $count_per_subtype[$key] = $subtype['count'];
+            }
         }
 
         return array(

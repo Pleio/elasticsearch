@@ -13,3 +13,23 @@ function elasticsearch_get_view($object) {
         return 'search/entity';
     }
 }
+
+function elasticsearch_console_sync_all() {
+    global $CONFIG;
+    $CONFIG->memcache = false;
+
+    ini_set('memory_limit', '1024M');
+    set_time_limit(0);
+
+    $ia = elgg_set_ignore_access(true);
+
+    $interface = ESInterface::get();
+    $bulksync = new ESBulkSync($interface);
+    $bulksync->sync();
+
+    elgg_set_ignore_access($ia);
+}
+
+function elasticsearch_console_index_reset() {
+    return true;
+}
