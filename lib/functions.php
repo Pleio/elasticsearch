@@ -31,5 +31,15 @@ function elasticsearch_console_sync_all() {
 }
 
 function elasticsearch_console_index_reset() {
-    return true;
+    $interface = ESInterface::get();
+
+    if ($interface->resetIndex()) {
+        if ($interface->putMapping()) {
+            echo "Index and mapping created succesfully.";
+        } else {
+            echo "Could not create mapping.";
+        }
+    } else {
+        echo "Could not create index.";
+    }
 }

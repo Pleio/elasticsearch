@@ -3,7 +3,7 @@
 class ESInterface {
 
     private static $instance;
-    private static $index = 'pleio';
+    private static $index;
 
     public static function get() {
         if (null === static::$instance) {
@@ -15,37 +15,71 @@ class ESInterface {
 
     protected function __construct() {
         global $CONFIG;
+
+        if (!isset($CONFIG->elasticsearch)) {
+            throw new ConfigurationException("No Elasticsearch configuration is provided.");
+        }
         $this->client = new Elasticsearch\Client($CONFIG->elasticsearch);
+
+        if (!isset($CONFIG->elasticsearch_index)) {
+            throw new ConfigurationException("No Elasticsearch index is configured.");
+        }
+        $this->index = $CONFIG->elasticsearch_index;
+
         $this->filter = new ESFilter();
     }
 
     private function __clone() {}
     private function __wakeup() {}
 
-    public function create_index() {
-        $params = array('index' => self::$index);
-        if (!$this->client->indices()->get($params)) {
-            return $this->client->indices()->create($params);
-        } else {
-            return false;
-        }
+    public function resetIndex() {
+        $params = array('index' => $this->index);
+
+        try {
+            $this->client->indices()->get($params);
+            $this->client->indices()->delete($params);
+        } catch (Exception $e) {}
+
+        return $this->client->indices()->create($params);
     }
 
-    public function delete_index() {
-        $params = array('index' => self::$index);
-        return $this->client->indices()->delete($params);
+    public function putMapping() {
+        $mapping = array(
+            'properties' => array(
+                'guid' => array('type' => 'integer'),
+                'owner_guid' => array('type' => 'integer'),
+                'access_id' => array('type' => 'integer'),
+                'site_guid' => array('type' => 'integer'),
+                'subtype' => array('type' => 'integer'),
+                'container_guid' => array('type' => 'integer'),
+                'time_created' => array('type' => 'integer'),
+                'time_updated' => array('type' => 'integer'),
+                'type' => array('type' => 'string', 'index' => 'not_analyzed')
+            )
+        );
+
+        $return = true;
+        $types = array('user', 'group', 'object', 'site');
+        foreach ($types as $type) {
+            $return &= $this->client->indices()->putMapping(array(
+                'index' => $this->index,
+                'type' => $type,
+                'body' => array(
+                    $type => $mapping
+                )
+            ));
+        }
+
+        return $return;
     }
 
     public function search($query, $types = array(), $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "") {
-        // @todo: implement $sort and $order
-
         $params = array();
         $params['index'] = self::$index;
 
         $params['body']['query']['bool']['must'] = array();
         $params['body']['size'] = $limit;
         $params['body']['from'] = $offset;
-
 
         $type = get_input('entity_type');
         if ($type) {
