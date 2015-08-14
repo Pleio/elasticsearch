@@ -75,7 +75,7 @@ class ESInterface {
 
     public function search($query, $types = array(), $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "") {
         $params = array();
-        $params['index'] = self::$index;
+        $params['index'] = $this->index;
 
         $params['body']['query']['bool']['must'] = array();
         $params['body']['size'] = $limit;
@@ -153,7 +153,7 @@ class ESInterface {
         }
 
         $params = array();
-        $params['index'] = self::$index;
+        $params['index'] = $this->index;
         $params['type'] = $object->type;
         $params['id'] = $object->guid;
 
@@ -173,7 +173,7 @@ class ESInterface {
         }
 
         $params = array();
-        $params['index'] = self::$index;
+        $params['index'] = $this->index;
         $params['type'] = $object->type;
         $params['id'] = $object->guid;
 
@@ -214,7 +214,7 @@ class ESInterface {
             $params['body'][] =  array(
                 'index' => array(
                     '_id' => $object->guid,
-                    '_index' => self::$index,
+                    '_index' => $this->index,
                     '_type' => $object->type
                 )
             );
