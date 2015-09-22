@@ -195,6 +195,7 @@ class ESInterface {
         $params['index'] = $this->index;
         $params['type'] = $object['type'];
         $params['id'] = $id;
+
         $params['body'] = $object;
 
         return $this->client->index($params);
