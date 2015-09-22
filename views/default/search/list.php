@@ -14,13 +14,18 @@
 
 <ul class="elgg-list search-list">
     <?php foreach ($vars['results']['hits'] as $entity): ?>
-        <li id="<?php echo "elgg-{$entity->getType()}-{$entity->getGUID()}"; ?>" class="elgg-item">
-            <?php
-                $view = elasticsearch_get_view($entity);
-                echo elgg_view($view, array(
-                    'entity' => $entity
-                ));
-            ?>
+        <?php if ($entity instanceof ElggAnnotation): ?>
+            <li id="<?php echo "elgg-{$entity->type}-{$entity->id}"; ?>" class="elgg-item">
+        <?php else: ?>
+            <li id="<?php echo "elgg-{$entity->type}-{$entity->guid}"; ?>" class="elgg-item">
+        <?php endif ?>
+
+        <?php
+        $view = elasticsearch_get_view($entity);
+        echo elgg_view($view, array(
+            'entity' => $entity
+        ));
+        ?>
         </li>
     <?php endforeach ?>
 </ul>

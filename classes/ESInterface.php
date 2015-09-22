@@ -54,7 +54,8 @@ class ESInterface {
                 'container_guid' => array('type' => 'integer'),
                 'time_created' => array('type' => 'integer'),
                 'time_updated' => array('type' => 'integer'),
-                'type' => array('type' => 'string', 'index' => 'not_analyzed')
+                'type' => array('type' => 'string', 'index' => 'not_analyzed'),
+                'tags' => array('type' => 'string', 'index' => 'not_analyzed')
             )
         );
 
@@ -69,6 +70,28 @@ class ESInterface {
                 )
             ));
         }
+
+        $mapping = array(
+            'properties' => array(
+                'id' => array('type' => 'integer'),
+                'owner_guid' => array('type' => 'integer'),
+                'access_id' => array('type' => 'integer'),
+                'site_guid' => array('type' => 'integer'),
+                'entity_guid' => array('type' => 'integer'),
+                'subtype' => array('type' => 'integer'),
+                'time_created' => array('type' => 'integer'),
+                'name' => array('type' => 'string', 'index' => 'not_analyzed'),
+                'type' => array('type' => 'string', 'index' => 'not_analyzed')
+            )
+        );
+
+        $return &= $this->client->indices()->putMapping(array(
+            'index' => $this->index,
+            'type' => 'annotation',
+            'body' => array(
+                'annotation' => $mapping
+            )
+        ));
 
         return $return;
     }
@@ -99,9 +122,18 @@ class ESInterface {
             'query_string' => array('query' => $query)
         );
 
+        $site = elgg_get_site_entity();
         $params['body']['query']['bool']['must'][] = array(
-            'terms' => array('access_id' => get_access_array())
+            'term' => array('site_guid' => $site->guid)
         );
+
+        $user = elgg_get_logged_in_user_guid();
+        $ignore_access = elgg_check_access_overrides($user);
+        if ($ignore_access != true) {
+            $params['body']['query']['bool']['must'][] = array(
+                'terms' => array('access_id' => get_access_array())
+            );
+        }
 
         $params['body']['facets'] = array();
         $params['body']['facets']['type']['terms'] = array(
@@ -115,10 +147,10 @@ class ESInterface {
 
         $hits = array();
         foreach ($results['hits']['hits'] as $hit) {
-            if ($hit['_type'] != 'annotation') {
-                $object = get_entity($hit['_id']);
-            } else {
+            if ($hit['_type'] == 'annotation') {
                 $object = elgg_get_annotation_from_id($hit['_id']);
+            } else {
+                $object = get_entity($hit['_id']);
             }
 
             if ($object) {
@@ -148,34 +180,42 @@ class ESInterface {
     }
 
     public function update($object) {
-        if (!$this->filter->apply($object)) {
+        $object = $this->filter->apply($object);
+        if (!$object) {
             return true;
+        }
+
+        if ($object['type'] == "annotation") {
+            $id = $object['id'];
+        } else {
+            $id = $object['guid'];
         }
 
         $params = array();
         $params['index'] = $this->index;
-        $params['type'] = $object->type;
-        $params['id'] = $object->guid;
-
-        $params['body'] = array();
-        $params['body']['access_id'] = $object->access_id;
-
-        foreach ($object->getExportableValues() as $key) {
-            $params['body'][$key] = $object->$key;
-        }
+        $params['type'] = $object['type'];
+        $params['id'] = $id;
+        $params['body'] = $object;
 
         return $this->client->index($params);
     }
 
     public function delete($object) {
-        if (!$this->filter->apply($object)) {
+        $object = $this->filter->apply($object);
+        if (!$object) {
             return true;
+        }
+
+        if ($object['type'] == "annotation") {
+            $id = $object['id'];
+        } else {
+            $id = $object['guid'];
         }
 
         $params = array();
         $params['index'] = $this->index;
-        $params['type'] = $object->type;
-        $params['id'] = $object->guid;
+        $params['type'] = $object['type'];
+        $params['id'] = $id;
 
         try {
             $this->client->delete($params);
@@ -187,7 +227,8 @@ class ESInterface {
     }
 
     public function enable($object) {
-        if (!$this->filter->apply($object)) {
+        $object = $this->filter->apply($object);
+        if (!$object) {
             return true;
         }
 
@@ -195,7 +236,8 @@ class ESInterface {
     }
 
     public function disable($object) {
-        if (!$this->filter->apply($object)) {
+        $object = $this->filter->apply($object);
+        if (!$object) {
             return true;
         }
 
@@ -207,30 +249,27 @@ class ESInterface {
         $params['body'] = array();
 
         foreach ($objects as $object) {
-            if (!$this->filter->apply($object)) {
+
+            $object = $this->filter->apply($object);
+            if (!$object) {
                 continue;
+            }
+
+            if ($object['type'] == "annotation") {
+                $id = $object['id'];
+            } else {
+                $id = $object['guid'];
             }
 
             $params['body'][] =  array(
                 'index' => array(
-                    '_id' => $object->guid,
+                    '_id' => $id,
                     '_index' => $this->index,
-                    '_type' => $object->type
+                    '_type' => $object['type']
                 )
             );
 
-            $values = array();
-            foreach ($object->getExportableValues() as $key) {
-                $values[$key] = $object->$key;
-            }
-
-            $values['access_id'] = $object->access_id;
-
-            if ($values['description']) {
-                $values['description'] = elgg_strip_tags($values['description']);
-            }
-
-            $params['body'][] = $values;
+            $params['body'][] = $object;
         }
 
         return $this->client->bulk($params);

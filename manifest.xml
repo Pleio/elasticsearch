@@ -16,11 +16,6 @@
 
     <conflicts>
         <type>plugin</type>
-        <name>search</name>
-    </conflicts>
-
-    <conflicts>
-        <type>plugin</type>
         <name>search_advanced</name>
     </conflicts>
 </plugin_manifest>

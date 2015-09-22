@@ -29,6 +29,7 @@ if ($container_entity instanceof ElggGroup) {
 $form_options = array(
     "body" => $form_body,
     "action" => $action,
+    "method" => "GET",
     "disable_security" => true,
     "class" => "search-advanced-widget-search-form"
 );
