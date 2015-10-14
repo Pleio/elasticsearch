@@ -7,18 +7,11 @@ $page_owner_guid = (int) get_input("page_owner_guid");
 $result = array();
 if (!empty($q)) {
 
-    $results = ESInterface::get()->search($q, array('users','groups', false, $limit, 0, false, false));
+    $users = ESInterface::get()->search($q, 'user', false, $limit, 0, false, false);
+    $groups = ESInterface::get()->search($q, 'group', false, $limit, 0, false, false);
 
-    $users = array();
-    $groups = array();
-
-    foreach ($results['hits'] as $result) {
-        if ($result instanceof ElggUser) {
-            $users[] = $result;
-        } elseif ($result instanceof ElggGroup) {
-            $groups[] = $result;
-        }
-    }
+    $users = $users['hits'];
+    $groups = $groups['hits'];
 
     $result = array();
     if ($users) {
