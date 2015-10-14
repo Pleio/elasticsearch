@@ -53,7 +53,7 @@ class ESFilter {
     }
 
     public function filterAnnotation($object) {
-        if (!in_array($object->name, array('group_topic_post', 'generic_comment', 'messageboard', 'page'))) {
+        if (!in_array($object->name, array('group_topic_post', 'generic_comment'))) {
             return false;
         }
 
@@ -72,8 +72,8 @@ class ESFilter {
     public function filterObject($object) {
         $subtype = get_subtype_from_id($object->subtype);
 
-        // do not index message objects
-        if (in_array($subtype, array('messages'))) {
+        // do not index specific types of content
+        if (in_array($subtype, array('messages','plugin','widget','custom_profile_field','custom_profile_field_category','reported_content','custom_group_field','custom_profile_type','gruop_widget','multi_dashboard'))) {
             return false;
         }
 
@@ -83,7 +83,7 @@ class ESFilter {
         }
 
         $return['title'] = $object->title;
-        $return['description'] = elgg_strip_tags($return['description']); // remove HTML
+        $return['description'] = elgg_strip_tags($object->description); // remove HTML
 
         $metadata = elgg_get_metadata(array(
             'site_guids' => false,
@@ -151,7 +151,7 @@ class ESFilter {
             $return[$field] = $object->$field;
         }
 
-        $return['title'] = $object->title;
+        $return['title'] = $object->name;
         $return['description'] = elgg_strip_tags($return['description']); // remove HTML
         return $return;
     }

@@ -1,15 +1,15 @@
 <?php
 
 $profile_fields = elgg_get_config("profile_fields");
-$profile_field_values = elgg_get_plugin_setting("user_profile_fields_search_form", "search_advanced");
+$profile_field_values = elgg_get_plugin_setting("user_profile_fields_search_form", "elasticsearch");
 
 if (empty($profile_field_values) || empty($profile_fields)) {
     return;
 }
 
-$submit_values = (array) get_input("search_advanced_profile_fields");
+$submit_values = (array) get_input("elasticsearch_profile_fields");
 $profile_field_values = json_decode($profile_field_values, true);
-$profile_field_soundex_submit_values = (array) get_input("search_advanced_profile_fields_soundex");
+$profile_field_soundex_submit_values = (array) get_input("elasticsearch_profile_fields_soundex");
 $output = array();
 
 foreach ($profile_field_values as $profile_field) {
@@ -26,7 +26,7 @@ foreach ($profile_field_values as $profile_field) {
     $row = new stdClass();
     $row->label = $name;
     $row->input = elgg_view("input/text", array(
-        "name" => "search_advanced_profile_fields[" . $profile_field . "]",
+        "name" => "elasticsearch_profile_fields[" . $profile_field . "]",
         "value" => elgg_extract($profile_field, $submit_values)
     ));
     
@@ -34,7 +34,7 @@ foreach ($profile_field_values as $profile_field) {
 }
 
 if (!empty($output)) {
-    echo "<table class='search-advanced-user-profile-table mtm'>";
+    echo "<table class='elasticsearch-user-profile-table mtm'>";
     foreach ($output as $row) {
         echo "<tr>";
         echo "<td><label>" . $row->label . "</label></td>";

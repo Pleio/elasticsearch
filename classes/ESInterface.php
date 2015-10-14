@@ -96,7 +96,7 @@ class ESInterface {
         return $return;
     }
 
-    public function search($query, $types = array(), $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "") {
+    public function search($query, $type, $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "") {
         $params = array();
         $params['index'] = $this->index;
 
@@ -104,17 +104,22 @@ class ESInterface {
         $params['body']['size'] = $limit;
         $params['body']['from'] = $offset;
 
-        $type = get_input('entity_type');
         if ($type) {
-            $params['body']['query']['bool']['must'][] = array(
-                'term' => array('type' => $type)
-            );
+            $params['type'] = $type;
         }
 
-        $subtype = get_input('entity_subtype');
-        if ($subtype) {
+        if ($subtypes) {
+            $search_subtypes = array();
+            if (is_array($subtypes)) {
+                foreach ($subtypes as $subtype) {
+                    $search_subtypes[] = get_subtype_id('object', $subtype);
+                }
+            } else {
+                $search_subtypes[] = get_subtype_id('object', $subtypes);
+            }
+
             $params['body']['query']['bool']['must'][] = array(
-                'term' => array('subtype' => get_subtype_id($type, $subtype))
+                'terms' => array('subtype' => $search_subtypes)
             );
         }
 
@@ -143,7 +148,16 @@ class ESInterface {
             'field' => 'subtype'
         );
 
-        $results = $this->client->search($params);
+        try {
+            $results = $this->client->search($params);
+        } catch (Exception $e) {
+            return array(
+                'count' => 0,
+                'count_per_type' => array(),
+                'count_per_subtype' => array(),
+                'hits' => array()
+            );
+        }
 
         $hits = array();
         foreach ($results['hits']['hits'] as $hit) {

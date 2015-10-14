@@ -20,6 +20,27 @@ $owner_guid = get_input('owner_guid', ELGG_ENTITIES_ANY_VALUE);
 $container_guid = get_input('container_guid', ELGG_ENTITIES_ANY_VALUE);
 $friends = get_input('friends', ELGG_ENTITIES_ANY_VALUE);
 
+$profile_fields = get_input('elasticsearch_profile_fields');
+if ($entity_type == "user" && $profile_fields) {
+    $execute_query = $query;
+    foreach ($profile_fields as $field => $value) {
+        $execute_query .= " AND " . $field . ":\"" . $value . "\"";
+    }
+} else {
+    $execute_query = $query;
+}
+
+if ($search_type == "comments") {
+    $types = "annotation";
+    $execute_query .= " AND name:(generic_comment OR group_topic_post)";
+} else {
+    $types = $entity_type;
+}
+
+if ($entity_subtype) {
+    $subtypes = $entity_subtype;
+}
+
 $sort = get_input('sort');
 switch ($sort) {
     case 'relevance':
@@ -62,7 +83,7 @@ if (!$query && !((count($profile_filter) > 0) && $entity_type == "user")) {
 
     $body  = elgg_view_title(elgg_echo('search:search_error'));
     if(!elgg_is_xhr()){
-        $body .= elgg_view_form("search_advanced/search", array("action" => "search", "method" => "GET", "disable_security" => true), array());
+        $body .= elgg_view_form("elasticsearch/search", array("action" => "search", "method" => "GET", "disable_security" => true), array());
     }
 
     $body .= elgg_echo('search:no_query');
@@ -119,17 +140,32 @@ if (isset($container) && $container instanceof ElggGroup) {
     $results['hits'] = array_slice($results['hits'], $offset, $limit);
 
 } else {
-    $results = ESInterface::get()->search($query, $types, $subtypes, $limit, $offset, $sort, $order);
+    $results = ESInterface::get()->search($execute_query, $types, $subtypes, $limit, $offset, $sort, $order);
 }
 
-$body = "";
-$body .= "<h2>" . elgg_echo('elasticsearch:nr_results', array($results['count'], "\"$display_query\"")) . "</h2>";
+$body = elgg_view_title(elgg_echo('elasticsearch:nr_results', array($results['count'], "\"$display_query\"")));
 
-$body .= elgg_view('search/list', array(
+// add search form
+if(!elgg_is_xhr()){
+    $body .= elgg_view_form("elasticsearch/search", array("action" => "search", "method" => "GET", "disable_security" => true), array(
+        'query' => $query,
+        'search_type' => $search_type,
+        'type' => $entity_type,
+        'subtype' => $entity_subtype,
+        'container_guid' => $container_guid
+    ));
+}
+
+$body .= elgg_view('elasticsearch/search/list', array(
     'results' => $results,
     'params' => array(
         'limit' => $limit,
-        'offset' => $offset
+        'offset' => $offset,
+        'query' => $query,
+        'search_type' => $search_type,
+        'type' => $entity_type,
+        'subtype' => $entity_subtype,
+        'container_guid' => $container_guid
     )
 ));
 
@@ -201,7 +237,12 @@ foreach ($custom_types as $type) {
 
     $url = elgg_get_site_url()."search?$data";
 
-    $menu_item = new ElggMenuItem($label, elgg_echo($label), $url);
+    $caption = elgg_echo($label);
+    if ($type == "comments" && array_key_exists('annotation', $results['count_per_type'])) {
+        $caption .= " <span class='elgg-quiet'>[" . $results['count_per_type']['annotation'] . "]</span>";
+    }
+
+    $menu_item = new ElggMenuItem($label, $caption, $url);
     elgg_register_menu_item('page', $menu_item);
 }
 

@@ -13,9 +13,4 @@
         <type>elgg_release</type>
         <version>1.8</version>
     </requires>
-
-    <conflicts>
-        <type>plugin</type>
-        <name>search_advanced</name>
-    </conflicts>
 </plugin_manifest>

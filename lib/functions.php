@@ -7,8 +7,16 @@ function elasticsearch_get_subtypes() {
 }
 
 function elasticsearch_get_view($object) {
-    if (elgg_view_exists('search/' . $object->type . '/' . $object->subtype)) {
-        return 'search/' . $object->type . '/' . $object->subtype;
+
+
+    if ($object->type == "annotation") {
+        $subtype = $object->name;
+    } else {
+        $subtype = get_subtype_from_id($object->subtype);
+    }
+
+    if (elgg_view_exists('search/' . $object->type . '/' . $subtype)) {
+        return 'search/' . $object->type . '/' . $subtype;
     } else {
         if (elgg_view_exists('search/' . $object->type)) {
             return 'search/' . $object->type;

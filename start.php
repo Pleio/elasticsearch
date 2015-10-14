@@ -5,9 +5,6 @@ require_once(dirname(__FILE__) . "/lib/functions.php");
 require_once(dirname(__FILE__) . "/lib/events.php");
 
 function elasticsearch_init() {
-    elgg_register_page_handler('search', 'elasticsearch_search_page_handler');
-    elgg_register_page_handler('search_advanced', 'elasticsearch_search_page_handler');
-
     elgg_register_event_handler('create', 'user', 'elasticsearch_create_event');
     elgg_register_event_handler('create', 'group', 'elasticsearch_create_event');
     elgg_register_event_handler('create', 'object', 'elasticsearch_create_event');
@@ -38,12 +35,19 @@ function elasticsearch_init() {
     elgg_register_event_handler('disable', 'site', 'elasticsearch_disable_event');
     elgg_register_event_handler('disable', 'annotation', 'elasticsearch_disable_event');
 
-    elgg_extend_view('css/elgg', 'search/css/site');
-    elgg_extend_view('js/elgg', 'search/js/site');
+    elgg_register_action("elasticsearch/settings/save", dirname(__FILE__) . "/actions/plugins/settings/save.php", "admin");
 
-    elgg_extend_view('page/elements/header', 'elasticsearch/header');
+    if (elgg_get_plugin_setting('is_enabled', 'elasticsearch') == "yes") {
+        elgg_extend_view('css/elgg', 'search/css/site');
+        elgg_extend_view('js/elgg', 'search/js/site');
 
-    elgg_register_widget_type("search", elgg_echo("search"), elgg_echo("search"), "profile,dashboard,index,groups", true);
+        elgg_extend_view('page/elements/header', 'elasticsearch/header');
+
+        elgg_register_widget_type("search", elgg_echo("search"), elgg_echo("search"), "profile,dashboard,index,groups", true);
+
+        elgg_register_page_handler('search', 'elasticsearch_search_page_handler');
+        elgg_register_page_handler('search_advanced', 'elasticsearch_search_page_handler');
+    }
 
     if (function_exists('pleio_register_console_handler')) {
         pleio_register_console_handler('es:index:reset', 'Reset the configured Elasticsearch index.', 'elasticsearch_console_index_reset');
