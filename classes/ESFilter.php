@@ -129,6 +129,10 @@ class ESFilter {
                 continue;
             }
 
+            if ($item->name == "main_birthday") {
+                continue;
+            }
+
             $name = $item->name;
             $value = elgg_strip_tags($item->value);
 
