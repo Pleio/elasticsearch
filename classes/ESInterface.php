@@ -260,11 +260,12 @@ class ESInterface {
         $params['body'] = $object;
 
         try {
-            return $this->client->index($params);
+            $this->client->index($params);
         } catch (Exception $e) {
             elgg_log('Elasticsearch update exception ' . $e->getMessage(), 'ERROR');
-            return false;
         }
+
+        return true; // always return true, so Elgg's processes are not disturbed.
     }
 
     public function delete($object) {
@@ -285,11 +286,12 @@ class ESInterface {
         $params['id'] = $id;
 
         try {
-            return $this->client->delete($params);
+            $this->client->delete($params);
         } catch (Exception $e) {
             elgg_log('Elasticsearch delete exception ' . $e->getMessage(), 'ERROR');
-            return false;
         }
+
+        return true; // always return true, so Elgg's processes are not disturbed.
     }
 
     public function enable($object) {
