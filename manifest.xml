@@ -4,7 +4,7 @@
     <author>Pleio</author>
     <category>search</category>
     <version>0.1</version>
-    <description>Elasticseach interface for ELGG.</description>
+    <description>An Elasticsearch integration for Elgg.</description>
     <website>https://github.com/Pleio/elasticsearch</website>
     <copyright>(C) 2015 Pleio</copyright>
     <license>GNU Public License version 2</license>

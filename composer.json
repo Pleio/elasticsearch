@@ -1,6 +1,6 @@
 {
     "name": "pleio/elasticsearch",
-    "description": "Search in ELGG powered by Elasticsearch.",
+    "description": "An Elasticsearch integration for Elgg.",
     "type": "elgg-plugin",
     "keywords": ["elgg", "plugin", "search"],
     "license": "GPL-2.0",

@@ -103,6 +103,7 @@ class ESFilter {
     }
 
     public function filterUser($object) {
+        global $CONFIG;
 
         if ($object->banned == "yes") {
             return false;
@@ -124,26 +125,33 @@ class ESFilter {
             'limit' => false
         ));
 
+        $return['metadata'] = array();
+
         foreach ($metadata as $item) {
             if ($item->access_id == ACCESS_PRIVATE) {
-                continue;
-            }
-
-            if ($item->name == "main_birthday") {
                 continue;
             }
 
             $name = $item->name;
             $value = elgg_strip_tags($item->value);
 
-            if (array_key_exists($name, $return)) {
-                if (!is_array($return[$name])) {
-                    $return[$name] = array($value);
-                }
-                $return[$name][] = $value;
-            } else {
-                $return[$name] = $value;
-            }
+            $return['metadata'][] = array(
+                'name' => $name,
+                'value' => $value
+            );
+        }
+
+        $dbprefix = $CONFIG->dbprefix;
+        $sites = get_data("SELECT e.guid FROM {$dbprefix}entity_relationships er LEFT JOIN {$dbprefix}entities e ON er.guid_two = e.guid WHERE relationship = 'member_of_site' AND guid_one = {$object->guid} AND e.type = 'site'");
+        $return['site_guid'] = array();
+        foreach ($sites as $site) {
+            $return['site_guid'][] = $site->guid;
+        }
+
+        $groups = get_data("SELECT e.guid FROM {$dbprefix}entity_relationships er LEFT JOIN {$dbprefix}entities e ON er.guid_two = e.guid WHERE relationship = 'member' AND guid_one = {$object->guid} AND e.type = 'group'");
+        $return['container_guid'] = array();
+        foreach($groups as $group) {
+            $return['container_guid'][] = $group->guid;
         }
 
         return $return;

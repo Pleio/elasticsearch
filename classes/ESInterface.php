@@ -60,7 +60,7 @@ class ESInterface {
         );
 
         $return = true;
-        $types = array('user', 'group', 'object', 'site');
+        $types = array('group', 'object', 'site');
         foreach ($types as $type) {
             $return &= $this->client->indices()->putMapping(array(
                 'index' => $this->index,
@@ -70,6 +70,34 @@ class ESInterface {
                 )
             ));
         }
+
+        $mapping = array(
+            'properties' => array(
+                'guid' => array('type' => 'integer'),
+                'owner_guid' => array('type' => 'integer'),
+                'access_id' => array('type' => 'integer'),
+                'site_guid' => array('type' => 'integer'),
+                'subtype' => array('type' => 'integer'),
+                'metadata' => array('properties' => array(
+                    'name' => array('type' => 'string', 'index' => 'not_analyzed'),
+                    'value' => array('type' => 'string'))),
+                'member_of_group' => array('type' => 'integer'),
+                'member_of_site' => array('type' => 'integer'),
+                'container_guid' => array('type' => 'integer'),
+                'time_created' => array('type' => 'integer'),
+                'time_updated' => array('type' => 'integer'),
+                'type' => array('type' => 'string', 'index' => 'not_analyzed'),
+                'tags' => array('type' => 'string', 'index' => 'not_analyzed')
+            )
+        );
+
+        $return &= $this->client->indices()->putMapping(array(
+            'index' => $this->index,
+            'type' => 'user',
+            'body' => array(
+                'user' => $mapping
+            )
+        ));
 
         $mapping = array(
             'properties' => array(
@@ -96,7 +124,7 @@ class ESInterface {
         return $return;
     }
 
-    public function search($query, $type, $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "") {
+    public function search($query, $type, $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "", $container_guid = 0, $profile_fields = array()) {
         $params = array();
         $params['index'] = $this->index;
 
@@ -121,6 +149,23 @@ class ESInterface {
             $params['body']['query']['bool']['must'][] = array(
                 'terms' => array('subtype' => $search_subtypes)
             );
+        }
+
+        if ($container_guid) {
+            $params['body']['query']['bool']['must'][] = array(
+                'term' => array('container_guid' => $container_guid)
+            );
+        }
+
+        if ($type == "user" && count($profile_fields) > 0) {
+            foreach ($profile_fields as $name => $value) {
+                $params['body']['query']['bool']['must'][] = array(
+                    'term' => array('metadata.name' => $name)
+                );
+                $params['body']['query']['bool']['must'][] = array(
+                    'match' => array('metadata.value' => $value)
+                );
+            }
         }
 
         $params['body']['query']['bool']['must'][] = array(
@@ -151,6 +196,8 @@ class ESInterface {
         try {
             $results = $this->client->search($params);
         } catch (Exception $e) {
+            elgg_log('Elasticsearch search exception ' . $e->getMessage(), 'ERROR');
+
             return array(
                 'count' => 0,
                 'count_per_type' => array(),
@@ -212,7 +259,12 @@ class ESInterface {
 
         $params['body'] = $object;
 
-        return $this->client->index($params);
+        try {
+            return $this->client->index($params);
+        } catch (Exception $e) {
+            elgg_log('Elasticsearch update exception ' . $e->getMessage(), 'ERROR');
+            return false;
+        }
     }
 
     public function delete($object) {
@@ -233,12 +285,11 @@ class ESInterface {
         $params['id'] = $id;
 
         try {
-            $this->client->delete($params);
-        } catch (Exception $exception) {
-
+            return $this->client->delete($params);
+        } catch (Exception $e) {
+            elgg_log('Elasticsearch delete exception ' . $e->getMessage(), 'ERROR');
+            return false;
         }
-
-        return true;
     }
 
     public function enable($object) {

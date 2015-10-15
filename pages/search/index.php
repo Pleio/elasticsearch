@@ -13,32 +13,14 @@ $search_type = get_input('search_type', 'all');
 
 $query = stripslashes(get_input('q', get_input('tag', '')));
 
-$profile_filter = get_input('search_advanced_profile_fields');
-$entity_type = get_input('entity_type', ELGG_ENTITIES_ANY_VALUE);
-$entity_subtype = get_input('entity_subtype', ELGG_ENTITIES_ANY_VALUE);
-$owner_guid = get_input('owner_guid', ELGG_ENTITIES_ANY_VALUE);
+$type = get_input('entity_type', ELGG_ENTITIES_ANY_VALUE);
+$subtype = get_input('entity_subtype', ELGG_ENTITIES_ANY_VALUE);
 $container_guid = get_input('container_guid', ELGG_ENTITIES_ANY_VALUE);
-$friends = get_input('friends', ELGG_ENTITIES_ANY_VALUE);
 
 $profile_fields = get_input('elasticsearch_profile_fields');
-if ($entity_type == "user" && $profile_fields) {
-    $execute_query = $query;
-    foreach ($profile_fields as $field => $value) {
-        $execute_query .= " AND " . $field . ":\"" . $value . "\"";
-    }
-} else {
-    $execute_query = $query;
-}
 
 if ($search_type == "comments") {
-    $types = "annotation";
-    $execute_query .= " AND name:(generic_comment OR group_topic_post)";
-} else {
-    $types = $entity_type;
-}
-
-if ($entity_subtype) {
-    $subtypes = $entity_subtype;
+    $type = "annotation";
 }
 
 $sort = get_input('sort');
@@ -95,53 +77,7 @@ if (!$query && !((count($profile_filter) > 0) && $entity_type == "user")) {
     return;
 }
 
-// @todo refactor: Not a very nice solution. Best solution would maybe be to reuse container_guid value of user in Elasticsearch.
-$container = get_entity($container_guid);
-if (isset($container) && $container instanceof ElggGroup) {
-    $results = ESInterface::get()->search($query, $types, $subtypes, 10000, 0, $sort, $order);
-
-    foreach ($results['hits'] as $key => $hit) {
-        $remove = false;
-
-        if ($hit->type == "user") {
-            if (!check_entity_relationship($hit->guid, "member", $container->guid)) {
-                $remove = true;
-            }
-        } else {
-            if ($hit->container_guid != $container->guid) {
-                $remove = true;
-            }
-        }
-
-        if ($remove === true) {
-            unset($results['hits'][$key]);
-            $results['count'] -= 1;
-            $results['count_per_type'][$hit->type] -= 1;
-
-            if ($hit->type == "object") {
-                $subtype = get_subtype_from_id($hit->subtype);
-                $results['count_per_subtype'][$subtype] -= 1;
-            }
-        }
-    }
-
-    foreach ($results['count_per_type'] as $key => $count) {
-        if ($count === 0) {
-            unset($results['count_per_type'][$key]);
-        }
-    }
-
-    foreach ($results['count_per_subtype'] as $key => $count) {
-        if ($count === 0) {
-            unset($results['count_per_subtype'][$key]);
-        }
-    }
-
-    $results['hits'] = array_slice($results['hits'], $offset, $limit);
-
-} else {
-    $results = ESInterface::get()->search($execute_query, $types, $subtypes, $limit, $offset, $sort, $order);
-}
+$results = ESInterface::get()->search($query, $type, $subtype, $limit, $offset, $sort, $order, $container_guid, $profile_fields);
 
 $body = elgg_view_title(elgg_echo('elasticsearch:nr_results', array($results['count'], "\"$display_query\"")));
 
@@ -150,8 +86,8 @@ if(!elgg_is_xhr()){
     $body .= elgg_view_form("elasticsearch/search", array("action" => "search", "method" => "GET", "disable_security" => true), array(
         'query' => $query,
         'search_type' => $search_type,
-        'type' => $entity_type,
-        'subtype' => $entity_subtype,
+        'type' => $type,
+        'subtype' => $subtype,
         'container_guid' => $container_guid
     ));
 }
@@ -163,8 +99,8 @@ $body .= elgg_view('elasticsearch/search/list', array(
         'offset' => $offset,
         'query' => $query,
         'search_type' => $search_type,
-        'type' => $entity_type,
-        'subtype' => $entity_subtype,
+        'type' => $type,
+        'subtype' => $subtype,
         'container_guid' => $container_guid
     )
 ));
