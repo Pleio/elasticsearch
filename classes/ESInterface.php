@@ -287,9 +287,7 @@ class ESInterface {
 
         try {
             $this->client->delete($params);
-        } catch (Exception $e) {
-            elgg_log('Elasticsearch delete exception ' . $e->getMessage(), 'ERROR');
-        }
+        } catch (Exception $e) {}
 
         return true; // always return true, so Elgg's processes are not disturbed.
     }
