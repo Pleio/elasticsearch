@@ -128,10 +128,6 @@ class ESFilter {
         $return['metadata'] = array();
 
         foreach ($metadata as $item) {
-            if ($item->access_id == ACCESS_PRIVATE) {
-                continue;
-            }
-
             $name = $item->name;
             $value = elgg_strip_tags($item->value);
 
