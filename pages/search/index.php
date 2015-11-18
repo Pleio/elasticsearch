@@ -77,7 +77,18 @@ if (!$query && !((count($profile_filter) > 0) && $entity_type == "user")) {
     return;
 }
 
-$results = ESInterface::get()->search($query, $type, $subtype, $limit, $offset, $sort, $order, $container_guid, $profile_fields);
+$results = ESInterface::get()->search(
+    $query,
+    $search_type,
+    $type,
+    $subtype,
+    $limit,
+    $offset,
+    $sort,
+    $order,
+    $container_guid,
+    $profile_fields
+);
 
 $body = elgg_view_title(elgg_echo('elasticsearch:nr_results', array($results['count'], "\"$display_query\"")));
 

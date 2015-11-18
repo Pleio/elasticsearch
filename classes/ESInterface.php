@@ -124,7 +124,7 @@ class ESInterface {
         return $return;
     }
 
-    public function search($query, $type, $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "", $container_guid = 0, $profile_fields = array()) {
+    public function search($query, $search_type, $type, $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "", $container_guid = 0, $profile_fields = array()) {
         $params = array();
         $params['index'] = $this->index;
 
@@ -168,9 +168,15 @@ class ESInterface {
             }
         }
 
-        $params['body']['query']['bool']['must'][] = array(
-            'query_string' => array('query' => $query)
-        );
+        if ($search_type == 'tags') {
+            $params['body']['query']['bool']['must'][] = array(
+                'term' => array('tags' => $query)
+            );
+        } else {
+            $params['body']['query']['bool']['must'][] = array(
+                'query_string' => array('query' => $query)
+            );
+        }
 
         $site = elgg_get_site_entity();
         $params['body']['query']['bool']['must'][] = array(
