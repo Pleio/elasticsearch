@@ -187,7 +187,7 @@ class ESInterface {
 
         $user = elgg_get_logged_in_user_guid();
         $ignore_access = elgg_check_access_overrides($user);
-        if ($ignore_access != true) {
+        if ($ignore_access != true && !elgg_is_admin_logged_in()) {
             $params['body']['query']['bool']['must'][] = array(
                 'terms' => array('access_id' => get_access_array())
             );
