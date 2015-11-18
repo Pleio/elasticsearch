@@ -125,6 +125,8 @@ class ESInterface {
     }
 
     public function search($query, $search_type, $type, $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "", $container_guid = 0, $profile_fields = array()) {
+        //@todo: implement $sort and $order
+
         $params = array();
         $params['index'] = $this->index;
 
@@ -190,6 +192,10 @@ class ESInterface {
                 'terms' => array('access_id' => get_access_array())
             );
         }
+
+        $params['body']['sort'] = array(
+            'time_updated' => 'desc'
+        );
 
         $params['body']['facets'] = array();
         $params['body']['facets']['type']['terms'] = array(
