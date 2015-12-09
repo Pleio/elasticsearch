@@ -128,12 +128,10 @@ class ESFilter {
         $return['metadata'] = array();
 
         foreach ($metadata as $item) {
-            $name = $item->name;
-            $value = elgg_strip_tags($item->value);
-
             $return['metadata'][] = array(
-                'name' => $name,
-                'value' => $value
+                'access_id' => $item->access_id,
+                'name' => $item->name,
+                'value' => elgg_strip_tags($item->value)
             );
         }
 

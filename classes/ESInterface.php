@@ -78,11 +78,11 @@ class ESInterface {
                 'access_id' => array('type' => 'integer'),
                 'site_guid' => array('type' => 'integer'),
                 'subtype' => array('type' => 'integer'),
+                'email' => array('type' => 'string', 'index' => 'not_analyzed'),
                 'metadata' => array('properties' => array(
+                    'access_id' => array('type' => 'integer'),
                     'name' => array('type' => 'string', 'index' => 'not_analyzed'),
                     'value' => array('type' => 'string'))),
-                'member_of_group' => array('type' => 'integer'),
-                'member_of_site' => array('type' => 'integer'),
                 'container_guid' => array('type' => 'integer'),
                 'time_created' => array('type' => 'integer'),
                 'time_updated' => array('type' => 'integer'),
