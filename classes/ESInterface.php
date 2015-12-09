@@ -79,7 +79,7 @@ class ESInterface {
                 'site_guid' => array('type' => 'integer'),
                 'subtype' => array('type' => 'integer'),
                 'email' => array('type' => 'string', 'index' => 'not_analyzed'),
-                'metadata' => array('properties' => array(
+                'metadata' => array('type'=> 'nested', 'properties' => array(
                     'access_id' => array('type' => 'integer'),
                     'name' => array('type' => 'string', 'index' => 'not_analyzed'),
                     'value' => array('type' => 'string'))),
@@ -124,18 +124,19 @@ class ESInterface {
         return $return;
     }
 
-    public function search($query, $search_type, $type, $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "", $container_guid = 0, $profile_fields = array()) {
-        //@todo: implement $sort and $order
+    public function search($string, $search_type, $type, $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "", $container_guid = 0, $profile_fields = array()) {
+        if ($search_type == 'tags') {
+            $search_type = SEARCH_TAGS;
+        } else {
+            $search_type = SEARCH_DEFAULT;
+        }
 
-        $params = array();
-        $params['index'] = $this->index;
-
-        $params['body']['query']['bool']['must'] = array();
-        $params['body']['size'] = $limit;
-        $params['body']['from'] = $offset;
+        $query = new ESQuery($this->index, $search_type);
+        $query->setOffset($offset);
+        $query->setLimit($limit);
 
         if ($type) {
-            $params['type'] = $type;
+            $query->filterType($type);
         }
 
         if ($subtypes) {
@@ -148,65 +149,19 @@ class ESInterface {
                 $search_subtypes[] = get_subtype_id('object', $subtypes);
             }
 
-            $params['body']['query']['bool']['must'][] = array(
-                'terms' => array('subtype' => $search_subtypes)
-            );
+            $query->filterSubtypes($search_subtypes);
         }
 
         if ($container_guid) {
-            $params['body']['query']['bool']['must'][] = array(
-                'term' => array('container_guid' => $container_guid)
-            );
+            $query->filterContainer($container_guid);
         }
 
-        if ($type == "user" && count($profile_fields) > 0) {
-            foreach ($profile_fields as $name => $value) {
-                $params['body']['query']['bool']['must'][] = array(
-                    'term' => array('metadata.name' => $name)
-                );
-                $params['body']['query']['bool']['must'][] = array(
-                    'match' => array('metadata.value' => $value)
-                );
-            }
+        if ($profile_fields && count($profile_fields) > 0) {
+            $query->filterProfileFields($profile_fields);
         }
-
-        if ($search_type == 'tags') {
-            $params['body']['query']['bool']['must'][] = array(
-                'term' => array('tags' => $query)
-            );
-        } else {
-            $params['body']['query']['bool']['must'][] = array(
-                'query_string' => array('query' => $query)
-            );
-        }
-
-        $site = elgg_get_site_entity();
-        $params['body']['query']['bool']['must'][] = array(
-            'term' => array('site_guid' => $site->guid)
-        );
-
-        $user = elgg_get_logged_in_user_guid();
-        $ignore_access = elgg_check_access_overrides($user);
-        if ($ignore_access != true && !elgg_is_admin_logged_in()) {
-            $params['body']['query']['bool']['must'][] = array(
-                'terms' => array('access_id' => get_access_array())
-            );
-        }
-
-        $params['body']['sort'] = array(
-            'time_updated' => 'desc'
-        );
-
-        $params['body']['facets'] = array();
-        $params['body']['facets']['type']['terms'] = array(
-            'field' => '_type'
-        );
-        $params['body']['facets']['subtype']['terms'] = array(
-            'field' => 'subtype'
-        );
 
         try {
-            $results = $this->client->search($params);
+            $results = $this->client->search($query->search($string));
         } catch (Exception $e) {
             elgg_log('Elasticsearch search exception ' . $e->getMessage(), 'ERROR');
 
