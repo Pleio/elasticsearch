@@ -31,17 +31,7 @@ class ESBulkSync {
             $guids[] = $row[0];
 
             if (count($guids) == 50) {
-                $entities = elgg_get_entities(array(
-                    'guids' => $guids,
-                    'limit' => false,
-                    'site_guids' => false,
-                    'callback' => 'elasticsearch_entity_row_to_std'
-                ));
-
-                try {
-                    $this->interface->bulk($entities);
-                } catch (Exception $exception) {}
-
+                $this->processItems('entities', $guids);
                 $guids = array();
             }
 
@@ -49,7 +39,10 @@ class ESBulkSync {
             if ($i % 500 == 0) {
                 echo round($i / $total * 100, 2) . "%\r";
             }
+        }
 
+        if (count($guids) > 0) {
+            $this->processItems('entities', $guids);
         }
     }
 
@@ -68,16 +61,7 @@ class ESBulkSync {
             $ids[] = $row[0];
 
             if (count($ids) == 50) {
-                $annotations = elgg_get_annotations(array(
-                    'annotations_ids' => $ids,
-                    'limit' => false,
-                    'site_guids' => false
-                ));
-
-                try {
-                    $this->interface->bulk($annotations);
-                } catch (Exception $exception) {}
-
+                $this->processItems('annotations', $ids);
                 $ids = array();
             }
 
@@ -85,7 +69,33 @@ class ESBulkSync {
             if ($i % 500 == 0) {
                 echo round($i / $total * 100, 2) . "%\r";
             }
-
         }
+
+        if (count($ids) > 0) {
+            $this->processItems('annotations', $ids);
+        }
+    }
+
+    public function processItems($type, $guids) {
+        if ($type == 'entities') {
+            $items = elgg_get_entities(array(
+                'guids' => $guids,
+                'limit' => false,
+                'site_guids' => false,
+                'callback' => 'elasticsearch_entity_row_to_std'
+            ));
+        } elseif ($type == 'annotations') {
+            $items = elgg_get_annotations(array(
+                'annotations_ids' => $guids,
+                'limit' => false,
+                'site_guids' => false
+            ));
+        } else {
+            throw new Exception('Invalid type.');
+        }
+
+        try {
+            $this->interface->bulk($items);
+        } catch (Exception $exception) {}
     }
 }
