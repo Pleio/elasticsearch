@@ -6,6 +6,8 @@ class ESQuery {
     private $params = array();
     private $metadataAccessFilter;
     private $searchtype;
+    private $type;
+    private $subtype;
     private $access_array;
 
     public function __construct($index, $searchtype = SEARCH_DEFAULT) {
@@ -15,7 +17,7 @@ class ESQuery {
         $this->params['body'] = array();
 
         $site = elgg_get_site_entity();
-        $this->params['body']['filter']['bool']['must'][] = array(
+        $this->params['body']['query']['bool']['must'][] = array(
             'term' => array('site_guid' => $site->guid)
         );
 
@@ -24,7 +26,7 @@ class ESQuery {
         if ($ignore_access != true && !elgg_is_admin_logged_in()) {
             $this->access_array = get_access_array();
 
-            $this->params['body']['filter']['bool']['must'][] = array(
+            $this->params['body']['query']['bool']['must'][] = array(
                 'terms' => array('access_id' => $this->access_array)
             );
         }
@@ -52,17 +54,19 @@ class ESQuery {
     }
 
     public function filterType($type) {
+        $this->type = $type;
         $this->params['type'] = $type;
     }
 
     public function filterSubtypes($subtypes) {
-        $this->params['body']['filter']['bool']['must'][] = array(
+        $this->subtypes = $subtypes;
+        $this->params['body']['query']['bool']['must'][] = array(
             'terms' => array('subtype' => $subtypes)
         );
     }
 
     public function filterContainer($container_guid) {
-        $this->params['body']['filter']['bool']['must'][] = array(
+        $this->params['body']['query']['bool']['must'][] = array(
             'term' => array('container_guid' => $container_guid)
         );
     }
@@ -117,24 +121,26 @@ class ESQuery {
                     )
                 );
 
-                $must = array(
-                    array('match' => array('metadata.value' => $string))
-                );
+                if ($this->type != 'object') {
+                    $must = array(
+                        array('match' => array('metadata.value' => $string))
+                    );
 
-                if ($this->access_array) {
-                    $must[] = array('terms' => array('metadata.access_id' => $this->access_array));
-                }
+                    if ($this->access_array) {
+                        $must[] = array('terms' => array('metadata.access_id' => $this->access_array));
+                    }
 
-                $this->params['body']['query']['bool']['should'][] = array(
-                    'nested' => array(
-                        'path' => 'metadata',
-                        'query' => array(
-                            'bool' => array(
-                                'must' => $must
+                    $this->params['body']['query']['bool']['should'][] = array(
+                        'nested' => array(
+                            'path' => 'metadata',
+                            'query' => array(
+                                'bool' => array(
+                                    'must' => $must
+                                )
                             )
                         )
-                    )
-                );
+                    );
+                }
 
                 break;
         }
