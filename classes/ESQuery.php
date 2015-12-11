@@ -124,7 +124,13 @@ class ESQuery {
 
                 if ($this->type != 'object') {
                     $must = array(
-                        array('match' => array('metadata.value' => $string))
+                        array('simple_query_string' => array(
+                            'query' => $string,
+                            'default_operator' => 'and',
+                            'fields' => array(
+                                'metadata.value'
+                            )
+                        ))
                     );
 
                     if ($this->access_array) {
