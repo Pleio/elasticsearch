@@ -109,6 +109,7 @@ class ESQuery {
                 $this->params['body']['query']['bool']['should'][] = array(
                     'simple_query_string' => array(
                         'query' => $string,
+                        'default_operator' => 'and',
                         'fields' => array(
                             'title',
                             'description',
