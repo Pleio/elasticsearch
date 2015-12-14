@@ -122,7 +122,7 @@ class ESQuery {
                     )
                 );
 
-                if ($this->type != 'object') {
+                if (!$this->type | $this->type == 'user') {
                     $must = array(
                         array('simple_query_string' => array(
                             'query' => $string,
