@@ -70,6 +70,9 @@ class ESFilter {
     }
 
     public function filterObject($object) {
+        global $CONFIG;
+        $dbprefix = $CONFIG->dbprefix;
+
         $subtype = get_subtype_from_id($object->subtype);
 
         // do not index specific types of content
@@ -85,17 +88,18 @@ class ESFilter {
         $return['title'] = $object->title;
         $return['description'] = elgg_strip_tags($object->description); // remove HTML
 
-        $metadata = elgg_get_metadata(array(
-            'site_guids' => false,
-            'guid' => $object->guid,
-            'limit' => false,
-            'metadata_name' => 'tags'
-        ));
+        $metastring_id = get_metastring_id('tags');
+        if (!$metastring_id) {
+            throw new Exception("No metastring id for tags found");
+        }
 
+        $metadata = get_data("SELECT md.access_id, v.string AS value FROM {$dbprefix}metadata md JOIN {$dbprefix}metastrings v ON md.value_id = v.id WHERE md.entity_guid = {$object->guid} AND md.name_id = {$metastring_id} AND md.enabled = 'yes'");
         if (count($metadata) > 0) {
             $return['tags'] = array();
             foreach ($metadata as $item) {
-                $return['tags'][] = $item->value;
+                if ($item->value) {
+                    $return['tags'][] = $item->value;
+                }
             }
         }
 
@@ -104,6 +108,7 @@ class ESFilter {
 
     public function filterUser($object) {
         global $CONFIG;
+        $dbprefix = $CONFIG->dbprefix;
 
         if ($object->banned == "yes") {
             return false;
@@ -119,14 +124,9 @@ class ESFilter {
         $return['email'] = $object->email;
         $return['language'] = $object->language;
 
-        $metadata = elgg_get_metadata(array(
-            'site_guids' => false,
-            'guid' => $object->guid,
-            'limit' => false
-        ));
-
         $return['metadata'] = array();
 
+        $metadata = get_data("SELECT md.access_id, n.string AS name, v.string AS value FROM {$dbprefix}metadata md JOIN {$dbprefix}metastrings n ON md.name_id = n.id JOIN {$dbprefix}metastrings v ON md.value_id = v.id WHERE md.entity_guid = {$object->guid} AND md.enabled = 'yes'");
         foreach ($metadata as $item) {
             $return['metadata'][] = array(
                 'access_id' => $item->access_id,
@@ -135,7 +135,6 @@ class ESFilter {
             );
         }
 
-        $dbprefix = $CONFIG->dbprefix;
         $sites = get_data("SELECT e.guid FROM {$dbprefix}entity_relationships er LEFT JOIN {$dbprefix}entities e ON er.guid_two = e.guid WHERE relationship = 'member_of_site' AND guid_one = {$object->guid} AND e.type = 'site'");
         $return['site_guid'] = array();
         foreach ($sites as $site) {
