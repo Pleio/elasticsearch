@@ -40,10 +40,24 @@ class ESInterface {
             $this->client->indices()->delete($params);
         } catch (Exception $e) {}
 
+        $params['body'] = array(
+            'index' => array(
+                'analysis' => array(
+                    'analyzer' => array(
+                        'analyzer_keyword' => array(
+                            'tokenizer' => 'keyword',
+                            'filter' => 'lowercase'
+                        )
+                    )
+                )
+            )
+        );
+
         return $this->client->indices()->create($params);
     }
 
     public function putMapping() {
+        $return = true;
         $mapping = array(
             'properties' => array(
                 'guid' => array('type' => 'integer'),
@@ -55,11 +69,10 @@ class ESInterface {
                 'time_created' => array('type' => 'integer'),
                 'time_updated' => array('type' => 'integer'),
                 'type' => array('type' => 'string', 'index' => 'not_analyzed'),
-                'tags' => array('type' => 'string', 'index' => 'not_analyzed')
+                'tags' => array('type' => 'string', 'analyzer' => 'analyzer_keyword')
             )
         );
 
-        $return = true;
         $types = array('group', 'object', 'site');
         foreach ($types as $type) {
             $return &= $this->client->indices()->putMapping(array(
@@ -87,7 +100,7 @@ class ESInterface {
                 'time_created' => array('type' => 'integer'),
                 'time_updated' => array('type' => 'integer'),
                 'type' => array('type' => 'string', 'index' => 'not_analyzed'),
-                'tags' => array('type' => 'string', 'index' => 'not_analyzed')
+                'tags' => array('type' => 'string', 'analyzer' => 'analyzer_keyword')
             )
         );
 
