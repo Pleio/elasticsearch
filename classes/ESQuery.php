@@ -96,8 +96,6 @@ class ESQuery {
     }
 
     public function search($string) {
-        $string = preg_replace("/$/", "*", $string);
-
         switch ($this->searchtype) {
             case SEARCH_TAGS:
                 $this->params['body']['query']['bool']['must'][] = array(

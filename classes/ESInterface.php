@@ -47,8 +47,23 @@ class ESInterface {
                         'analyzer_keyword' => array(
                             'tokenizer' => 'keyword',
                             'filter' => 'lowercase'
+                        ),
+                        'edge_ngram_analyzer' => array(
+                            'filter' => array(
+                                'lowercase',
+                                'edge_ngram_filter'
+                            ),
+                            'type' => 'custom',
+                            'tokenizer' => 'standard'
                         )
-                    )
+                    ),
+                    'filter' => array(
+                        'edge_ngram_filter' => array(
+                            'type' => 'edge_ngram',
+                            'min_gram' => '3',
+                            'max_gram' => '20'
+                        )
+                    ),
                 )
             )
         );
@@ -83,6 +98,27 @@ class ESInterface {
                 )
             ));
         }
+
+        // Add title and description field mapping to object
+        $mapping['properties']['title'] = array(
+            'type' => 'string',
+            'index_analyzer' => 'edge_ngram_analyzer',
+            'search_analyzer' => 'standard'
+        );
+        $mapping['properties']['description'] = array(
+            'type' => 'string',
+            'index_analyzer' => 'edge_ngram_analyzer',
+            'search_analyzer' => 'standard'
+        );
+
+        $type = 'object';
+        $return &= $this->client->indices()->putMapping(array(
+            'index' => $this->index,
+            'type' => $type,
+            'body' => array(
+                $type => $mapping
+            )
+        ));
 
         $mapping = array(
             'properties' => array(
