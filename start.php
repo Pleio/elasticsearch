@@ -35,6 +35,11 @@ function elasticsearch_init() {
     elgg_register_event_handler('disable', 'site', 'elasticsearch_disable_event');
     elgg_register_event_handler('disable', 'annotation', 'elasticsearch_disable_event');
 
+    elgg_register_event_handler('create', 'member', 'elasticsearch_update_relationship_event');
+    elgg_register_event_handler('delete', 'member', 'elasticsearch_update_relationship_event');
+    elgg_register_event_handler('create', 'member_of_site', 'elasticsearch_update_relationship_event');
+    elgg_register_event_handler('delete', 'member_of_site', 'elasticsearch_update_relationship_event');
+
     elgg_register_action("elasticsearch/settings/save", dirname(__FILE__) . "/actions/plugins/settings/save.php", "admin");
 
     if (elgg_get_plugin_setting('is_enabled', 'elasticsearch') == "yes") {
