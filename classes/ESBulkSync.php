@@ -19,7 +19,7 @@ class ESBulkSync {
 
         $result = execute_query('SELECT COUNT(`guid`) FROM elgg_entities', $dblink);
 
-        $row = mysql_fetch_row($result);
+        $row = mysqli_fetch_row($result);
         $total = (int) $row[0];
 
         $result = execute_query('SELECT `guid` FROM elgg_entities ORDER BY guid', $dblink);
@@ -27,7 +27,7 @@ class ESBulkSync {
         $i = 1;
         $guids = array();
 
-        while ($row = mysql_fetch_row($result)) {
+        while ($row = mysqli_fetch_row($result)) {
             $guids[] = $row[0];
 
             if (count($guids) == 50) {
@@ -52,12 +52,12 @@ class ESBulkSync {
 
         $result = execute_query('SELECT COUNT(`id`) FROM elgg_annotations', $dblink);
 
-        $row = mysql_fetch_row($result);
+        $row = mysqli_fetch_row($result);
         $total = (int) $row[0];
 
         $result = execute_query('SELECT `id` FROM elgg_annotations ORDER BY id', $dblink);
 
-        while ($row = mysql_fetch_row($result)) {
+        while ($row = mysqli_fetch_row($result)) {
             $ids[] = $row[0];
 
             if (count($ids) == 50) {
