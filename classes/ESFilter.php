@@ -63,7 +63,7 @@ class ESFilter {
 
         $return = array();
         foreach (self::$annotation_fields as $field) {
-            $return[$field] = strip_tags($object->$field);
+            $return[$field] = html_entity_decode(strip_tags($object->$field));
         }
 
         return $return;
@@ -85,8 +85,8 @@ class ESFilter {
             $return[$field] = $object->$field;
         }
 
-        $return['title'] = $object->title;
-        $return['description'] = elgg_strip_tags($object->description); // remove HTML
+        $return['title'] = html_entity_decode($object->title);
+        $return['description'] = html_entity_decode(elgg_strip_tags($object->description)); // remove HTML
 
         $metastring_id = get_metastring_id('tags');
         if (!$metastring_id) {
@@ -100,6 +100,27 @@ class ESFilter {
                 if ($item->value) {
                     $return['tags'][] = $item->value;
                 }
+            }
+        }
+
+        if (in_array($subtype, array('question', 'cafe', 'news', 'blog'))) {
+            if ($subtype == "question") {
+                $comment_subtype = "answer";
+            } else {
+                $comment_subtype = "comment";
+            }
+
+            $options = array(
+                "type" => "object",
+                "subtype" => $comment_subtype,
+                "container_guid" => $object->guid,
+                "site_guids" => null,
+                "limit" => false
+            );
+
+            $return['comments'] = array();
+            foreach (elgg_get_entities($options) as $comment) {
+                $return['comments'][] = html_entity_decode(elgg_strip_tags($comment->description));
             }
         }
 
@@ -119,7 +140,7 @@ class ESFilter {
             $return[$field] = $object->$field;
         }
 
-        $return['name'] = $object->name;
+        $return['name'] = html_entity_decode($object->name);
         $return['username'] = $object->username;
         $return['email'] = $object->email;
         $return['language'] = $object->language;
@@ -131,7 +152,7 @@ class ESFilter {
             $return['metadata'][] = array(
                 'access_id' => $item->access_id,
                 'name' => $item->name,
-                'value' => elgg_strip_tags($item->value)
+                'value' => html_entity_decode(elgg_strip_tags($item->value))
             );
         }
 
@@ -156,8 +177,8 @@ class ESFilter {
             $return[$field] = $object->$field;
         }
 
-        $return['title'] = $object->name;
-        $return['description'] = elgg_strip_tags($return['description']); // remove HTML
+        $return['title'] = html_entity_decode($object->name);
+        $return['description'] = html_entity_decode(elgg_strip_tags($return['description'])); // remove HTML
         return $return;
     }
 
@@ -167,8 +188,8 @@ class ESFilter {
             $return[$field] = $object->$field;
         }
 
-        $return['title'] = $object->title;
-        $return['description'] = elgg_strip_tags($return['description']); // remove HTML
+        $return['title'] = html_entity_decode($object->title);
+        $return['description'] = html_entity_decode(elgg_strip_tags($return['description'])); // remove HTML
         $return['url'] = $object->url;
         return $return;
     }

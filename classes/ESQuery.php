@@ -113,6 +113,7 @@ class ESQuery {
                         'fields' => array(
                             'title',
                             'description',
+                            'comments',
                             'value',
                             'username',
                             'name',
