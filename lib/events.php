@@ -1,7 +1,7 @@
 <?php
 
 function elasticsearch_create_event($event, $object_type, $object) {
-    if (in_array($object->getSubtype(), array('answer', 'comment'))) {
+    if ($object instanceof ElggObject && in_array($object->getSubtype(), array('answer', 'comment'))) {
         $object = $object->getContainerEntity();
     }
 
@@ -18,7 +18,7 @@ function elasticsearch_update_event($event, $object_type, $object) {
 
 
 function elasticsearch_delete_event($event, $object_type, $object) {
-    if (in_array($object->getSubtype(), array('answer', 'comment'))) {
+    if ($object instanceof ElggObject && in_array($object->getSubtype(), array('answer', 'comment'))) {
         $object = $object->getContainerEntity();
         ESSchedule::get()->schedule("update", $object);
     } else {
@@ -27,7 +27,7 @@ function elasticsearch_delete_event($event, $object_type, $object) {
 }
 
 function elasticsearch_enable_event($event, $object_type, $object) {
-    if (in_array($object->getSubtype(), array('answer', 'comment'))) {
+    if ($object instanceof ElggObject && in_array($object->getSubtype(), array('answer', 'comment'))) {
         $object = $object->getContainerEntity();
     }
 
@@ -35,7 +35,7 @@ function elasticsearch_enable_event($event, $object_type, $object) {
 }
 
 function elasticsearch_disable_event($event, $object_type, $object) {
-    if (in_array($object->getSubtype(), array('answer', 'comment'))) {
+    if ($object instanceof ElggObject && in_array($object->getSubtype(), array('answer', 'comment'))) {
         $object = $object->getContainerEntity();
         ESSchedule::get()->schedule("update", $object);
     } else {
