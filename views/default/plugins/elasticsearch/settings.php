@@ -9,12 +9,6 @@ $noyes_options = array(
     "yes" => elgg_echo("option:yes")
 );
 
-$content = "<div>";
-$content .= elgg_echo("elasticsearch:settings:enabled");
-$content .= elgg_view("input/dropdown", array("name" => "params[is_enabled]", "options_values" => $noyes_options, "value" => $plugin->is_enabled, "class" => "mls"));
-$content .= "</div>";
-echo elgg_view_module("inline", elgg_echo("elasticsearch:settings:title"), $content);
-
 $title = elgg_echo('elasticsearch:settings:profile_fields');
 $content = "";
 $content .= "<div class='search-advanced-settings-profile-fields'>";
