@@ -179,6 +179,7 @@ class ESInterface {
             $search_type = SEARCH_TAGS;
         } else {
             $search_type = SEARCH_DEFAULT;
+            $string = strtolower($string);
         }
 
         $query = new ESQuery($this->index, $search_type);
