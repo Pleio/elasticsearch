@@ -54,6 +54,16 @@ function elasticsearch_init() {
     elgg_register_page_handler('search', 'elasticsearch_search_page_handler');
     elgg_register_page_handler('search_advanced', 'elasticsearch_search_page_handler');
 
+    elgg_register_plugin_hook_handler("route", "groups", "elasticsearch_groups_hook", 100);
+
+    elgg_unregister_plugin_hook_handler("search", "user", "search_users_hook");
+    elgg_unregister_plugin_hook_handler("search", "user", "search_advanced_users_hook");
+    elgg_register_plugin_hook_handler("search", "user", "elasticsearch_search__user_hook_handler");
+
+    elgg_unregister_plugin_hook_handler("search", "tags", "search_tags_hook");
+    elgg_unregister_plugin_hook_handler("search", "tags", "search_advanced_tags_hook");
+    elgg_register_plugin_hook_handler("search", "tags", "elasticsearch_search_tags_hook_handler");
+
     if (function_exists('pleio_register_console_handler')) {
         pleio_register_console_handler('es:index:reset', 'Reset the configured Elasticsearch index.', 'elasticsearch_console_index_reset');
         pleio_register_console_handler('es:sync:all', 'Synchronise all entities to Elasticsearch.', 'elasticsearch_console_sync_all');
@@ -61,6 +71,45 @@ function elasticsearch_init() {
 }
 
 elgg_register_event_handler("init", "system", "elasticsearch_init");
+
+function elasticsearch_search_user_hook_handler($hook, $type, $return_value, $params) {
+    $limit = $params["limit"] ? $params["limit"] : 10;
+    $offset = $params["offset"] ? $params["offset"] : 0;
+    $query = $params["$query"];
+
+    $results = ESInterface::get()->search($params["query"], SEARCH_DEFAULT, "user", [], $params["limit"], $params["offset"]);
+
+    return [
+        "count" => $results["count"],
+        "entities" => $results["hits"]
+    ];
+}
+
+function elasticsearch_search_tags_hook_handler($hook, $type, $return_value, $params) {
+    $limit = $params["limit"] ? $params["limit"] : 10;
+    $offset = $params["offset"] ? $params["offset"] : 0;
+    $query = $params["$query"];
+
+    $results = ESInterface::get()->search($params["query"], SEARCH_TAGS, "object", [], $params["limit"], $params["offset"]);
+
+    return [
+        "count" => $results["count"],
+        "entities" => $results["entities"]
+    ];
+}
+
+function elasticsearch_groups_hook($hook_name, $entity_type, $return_value, $params) {
+    $base_dir = dirname(__FILE__) . '/pages/groups';
+    $page = elgg_extract("segments", $return_value);
+    $tag = get_input("tag");
+
+    switch ($page[0]) {
+        case "search":
+            forward("/search?q=${tag}&entity_type=group&search_type=tags");
+            return false;
+            break;
+    }
+}
 
 function elasticsearch_search_page_handler($page) {
     $base_dir = dirname(__FILE__) . '/pages/search';
