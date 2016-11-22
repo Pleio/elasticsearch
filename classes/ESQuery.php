@@ -45,6 +45,12 @@ class ESQuery {
         );
     }
 
+    public function setSort($sort, $order = "desc") {
+        $this->params['body']['sort'] = array(
+            $sort => $order
+        );
+    }
+
     public function setOffset($offset) {
         $this->params['body']['from'] = $offset;
     }

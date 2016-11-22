@@ -190,6 +190,10 @@ class ESInterface {
             $query->filterType($type);
         }
 
+        if ($sort && $order) {
+            $query->setSort($sort, $order);
+        }
+
         if ($subtypes) {
             $search_subtypes = array();
             if (is_array($subtypes)) {
