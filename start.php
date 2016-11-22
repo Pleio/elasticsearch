@@ -58,7 +58,7 @@ function elasticsearch_init() {
 
     elgg_unregister_plugin_hook_handler("search", "user", "search_users_hook");
     elgg_unregister_plugin_hook_handler("search", "user", "search_advanced_users_hook");
-    elgg_register_plugin_hook_handler("search", "user", "elasticsearch_search__user_hook_handler");
+    elgg_register_plugin_hook_handler("search", "user", "elasticsearch_search_user_hook_handler");
 
     elgg_unregister_plugin_hook_handler("search", "tags", "search_tags_hook");
     elgg_unregister_plugin_hook_handler("search", "tags", "search_advanced_tags_hook");
