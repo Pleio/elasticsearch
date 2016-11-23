@@ -190,7 +190,11 @@ class ESInterface {
             $query->filterType($type);
         }
 
-        if ($sort && $order) {
+        if ($sort && $sort !== "relevance") {
+            if (!$order) {
+                $order = "asc";
+            }
+
             $query->setSort($sort, $order);
         }
 
