@@ -174,7 +174,7 @@ class ESInterface {
         return $return;
     }
 
-    public function search($string, $search_type, $type, $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "", $container_guid = 0, $profile_fields = array()) {
+    public function search($string, $search_type, $type, $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "", $container_guid = 0, $profile_fields = array(), $access_id = 0) {
         if ($search_type == 'tags') {
             $search_type = SEARCH_TAGS;
         } else {
@@ -213,6 +213,10 @@ class ESInterface {
 
         if ($container_guid) {
             $query->filterContainer($container_guid);
+        }
+
+        if ($access_id) {
+            $query->filterAccess($access_id);
         }
 
         if ($profile_fields && count($profile_fields) > 0) {

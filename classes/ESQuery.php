@@ -77,6 +77,12 @@ class ESQuery {
         );
     }
 
+    public function filterAccess($access_ids) {
+        $this->params['body']['query']['bool']['must'][] = array(
+            'terms' => array('access_id' => $access_ids)
+        );
+    }
+
     public function filterProfileFields($profile_fields) {
         foreach ($profile_fields as $name => $value) {
             $must = array(
