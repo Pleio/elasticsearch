@@ -77,7 +77,25 @@ function elasticsearch_search_user_hook_handler($hook, $type, $return_value, $pa
     $offset = $params["offset"] ? $params["offset"] : 0;
     $query = $params["$query"];
 
-    $results = ESInterface::get()->search($params["query"], SEARCH_DEFAULT, "user", [], $params["limit"], $params["offset"]);
+    $profile_filter = [];
+    foreach ($params["profile_filter"] as $key => $value) {
+        if ($key && $value) {
+            $profile_filter[$key] = $value;
+        }
+    }
+
+    $results = ESInterface::get()->search(
+        $params["query"],
+        SEARCH_DEFAULT,
+        "user",
+        [],
+        $params["limit"],
+        $params["offset"],
+        null,
+        null,
+        null,
+        $profile_filter
+    );
 
     return [
         "count" => $results["count"],
