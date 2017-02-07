@@ -1,4 +1,5 @@
 <?php
+use Elasticsearch\ClientBuilder;
 
 class ESInterface {
 
@@ -19,7 +20,8 @@ class ESInterface {
         if (!isset($CONFIG->elasticsearch)) {
             throw new ConfigurationException("No Elasticsearch configuration is provided.");
         }
-        $this->client = new Elasticsearch\Client($CONFIG->elasticsearch);
+
+        $this->client = Elasticsearch\ClientBuilder::fromConfig($CONFIG->elasticsearch);
 
         if (!isset($CONFIG->elasticsearch_index)) {
             throw new ConfigurationException("No Elasticsearch index is configured.");
