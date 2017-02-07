@@ -85,6 +85,10 @@ class ESFilter {
             $return[$field] = $object->$field;
         }
 
+        if ($subtype == "page_top") {
+            $return["subtype"] = get_subtype_id("object", "page");
+        }
+
         $return['title'] = html_entity_decode($object->title);
         $return['description'] = html_entity_decode(elgg_strip_tags($object->description)); // remove HTML
 

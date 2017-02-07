@@ -131,6 +131,11 @@ foreach ($types as $type => $subtypes) {
     // @todo when using index table, can include result counts on each of these.
     if (is_array($subtypes) && count($subtypes)) {
         foreach ($subtypes as $subtype) {
+            // page_top objects are indexed as page objects
+            if ($subtype == "page_top") {
+                continue;
+            }
+
             $label = "item:$type:$subtype";
 
             $data = htmlspecialchars(http_build_query(array(
