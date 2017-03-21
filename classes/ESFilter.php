@@ -76,7 +76,7 @@ class ESFilter {
         $subtype = get_subtype_from_id($object->subtype);
 
         // do not index specific types of content
-        if (in_array($subtype, array('messages','plugin','widget','custom_profile_field','custom_profile_field_category','reported_content','custom_group_field','custom_profile_type','gruop_widget','multi_dashboard'))) {
+        if (in_array($subtype, array('messages','plugin','widget','custom_profile_field','custom_profile_field_category','reported_content','custom_group_field','custom_profile_type','gruop_widget','multi_dashboard','comment', 'answer'))) {
             return false;
         }
 
@@ -91,21 +91,7 @@ class ESFilter {
 
         $return['title'] = html_entity_decode($object->title);
         $return['description'] = html_entity_decode(elgg_strip_tags($object->description)); // remove HTML
-
-        $metastring_id = get_metastring_id('tags');
-        if (!$metastring_id) {
-            throw new Exception("No metastring id for tags found");
-        }
-
-        $metadata = get_data("SELECT md.access_id, v.string AS value FROM {$dbprefix}metadata md JOIN {$dbprefix}metastrings v ON md.value_id = v.id WHERE md.entity_guid = {$object->guid} AND md.name_id = {$metastring_id} AND md.enabled = 'yes'");
-        if (count($metadata) > 0) {
-            $return['tags'] = array();
-            foreach ($metadata as $item) {
-                if ($item->value) {
-                    $return['tags'][] = $item->value;
-                }
-            }
-        }
+        $return['tags'] = $this->getTags($object);
 
         if (in_array($subtype, array('question', 'cafe', 'news', 'blog'))) {
             if ($subtype == "question") {
@@ -114,18 +100,7 @@ class ESFilter {
                 $comment_subtype = "comment";
             }
 
-            $options = array(
-                "type" => "object",
-                "subtype" => $comment_subtype,
-                "container_guid" => $object->guid,
-                "site_guids" => null,
-                "limit" => false
-            );
-
-            $return['comments'] = array();
-            foreach (elgg_get_entities($options) as $comment) {
-                $return['comments'][] = html_entity_decode(elgg_strip_tags($comment->description));
-            }
+            $return['comments'] = $this->getComments($object, $comment_subtype);
         }
 
         return $return;
@@ -183,6 +158,8 @@ class ESFilter {
 
         $return['title'] = html_entity_decode($object->name);
         $return['description'] = html_entity_decode(elgg_strip_tags($return['description'])); // remove HTML
+        $return['tags'] = $this->getTags($object, "interests");
+
         return $return;
     }
 
@@ -202,4 +179,48 @@ class ESFilter {
         return false;
     }
 
+    private function getTags($object, $metastring = "tags") {
+        $dbprefix = elgg_get_config("dbprefix");
+
+        $metastring_id = (int) get_metastring_id($metastring);
+        if (!$metastring_id) {
+            return [];
+        }
+
+        $results = get_data("SELECT md.access_id, v.string AS value FROM {$dbprefix}metadata md JOIN {$dbprefix}metastrings v ON md.value_id = v.id WHERE md.entity_guid = {$object->guid} AND md.name_id = {$metastring_id} AND md.enabled = 'yes'");
+        
+        $return = [];
+        foreach ($results as $result) {
+            if (!$result->value) {
+                continue;
+            }
+
+            $return[] = $result->value;
+        }
+
+        return $return;
+    }
+
+    private function getComments($object, $subtype = "comment") {
+        $options = array(
+            "type" => "object",
+            "subtype" => $subtype,
+            "container_guid" => $object->guid,
+            "site_guids" => null,
+            "limit" => false
+        );
+
+        $results = elgg_get_entities($options);
+
+        if (!$results) {
+            return [];
+        }
+
+        $return = [];
+        foreach ($results as $result) {
+            $return[] = html_entity_decode(elgg_strip_tags($result->description));
+        }
+
+        return $return;
+    }
 }

@@ -85,7 +85,6 @@ class ESInterface {
                 'container_guid' => array('type' => 'integer'),
                 'time_created' => array('type' => 'integer'),
                 'time_updated' => array('type' => 'integer'),
-                'comments' => array('type' => 'string'),
                 'type' => array('type' => 'string', 'index' => 'not_analyzed'),
                 'tags' => array('type' => 'string', 'analyzer' => 'analyzer_keyword')
             )
@@ -102,13 +101,18 @@ class ESInterface {
             ));
         }
 
-        // Add title and description field mapping to object
+        // Add title, description and comments field mapping to object
         $mapping['properties']['title'] = array(
             'type' => 'string',
             'analyzer' => 'edge_ngram_analyzer',
             'search_analyzer' => 'standard'
         );
         $mapping['properties']['description'] = array(
+            'type' => 'string',
+            'analyzer' => 'edge_ngram_analyzer',
+            'search_analyzer' => 'standard'
+        );
+        $mapping['properties']['comments'] = array(
             'type' => 'string',
             'analyzer' => 'edge_ngram_analyzer',
             'search_analyzer' => 'standard'
