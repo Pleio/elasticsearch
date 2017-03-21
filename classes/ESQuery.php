@@ -36,11 +36,11 @@ class ESQuery {
             'time_updated' => 'desc'
         );
 
-        $this->params['body']['facets'] = array();
-        $this->params['body']['facets']['type']['terms'] = array(
+        $this->params['body']['aggregations'] = array();
+        $this->params['body']['aggregations']['type']['terms'] = array(
             'field' => '_type'
         );
-        $this->params['body']['facets']['subtype']['terms'] = array(
+        $this->params['body']['aggregations']['subtype']['terms'] = array(
             'field' => 'subtype'
         );
     }

@@ -105,12 +105,12 @@ class ESInterface {
         // Add title and description field mapping to object
         $mapping['properties']['title'] = array(
             'type' => 'string',
-            'index_analyzer' => 'edge_ngram_analyzer',
+            'analyzer' => 'edge_ngram_analyzer',
             'search_analyzer' => 'standard'
         );
         $mapping['properties']['description'] = array(
             'type' => 'string',
-            'index_analyzer' => 'edge_ngram_analyzer',
+            'analyzer' => 'edge_ngram_analyzer',
             'search_analyzer' => 'standard'
         );
 
@@ -252,12 +252,12 @@ class ESInterface {
         }
 
         $count_per_type = array();
-        foreach ($results['facets']['type']['terms'] as $type) {
+        foreach ($results['aggregations']['type']['terms'] as $type) {
             $count_per_type[$type['term']] = $type['count'];
         }
 
         $count_per_subtype = array();
-        foreach ($results['facets']['subtype']['terms'] as $subtype) {
+        foreach ($results['aggregations']['subtype']['terms'] as $subtype) {
             if ($subtype['term']) {
                 $key = get_subtype_from_id($subtype['term']);
                 $count_per_subtype[$key] = $subtype['count'];
