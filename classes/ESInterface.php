@@ -256,15 +256,15 @@ class ESInterface {
         }
 
         $count_per_type = array();
-        foreach ($results['aggregations']['type']['terms'] as $type) {
-            $count_per_type[$type['term']] = $type['count'];
+        foreach ($results['aggregations']['type']['buckets'] as $type) {
+            $count_per_type[$type['key']] = $type['doc_count'];
         }
 
         $count_per_subtype = array();
-        foreach ($results['aggregations']['subtype']['terms'] as $subtype) {
-            if ($subtype['term']) {
-                $key = get_subtype_from_id($subtype['term']);
-                $count_per_subtype[$key] = $subtype['count'];
+        foreach ($results['aggregations']['subtype']['buckets'] as $subtype) {
+            if ($subtype['key']) {
+                $key = get_subtype_from_id($subtype['key']);
+                $count_per_subtype[$key] = $subtype['doc_count'];
             }
         }
 
