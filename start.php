@@ -123,7 +123,7 @@ function elasticsearch_groups_hook($hook_name, $entity_type, $return_value, $par
 
     switch ($page[0]) {
         case "search":
-            forward("/search?q=${tag}&entity_type=group&search_type=tags");
+            forward("/search?q=\"${tag}\"&entity_type=group&search_type=tags");
             return false;
             break;
     }
