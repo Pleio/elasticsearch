@@ -110,10 +110,6 @@ class ESFilter {
         global $CONFIG;
         $dbprefix = $CONFIG->dbprefix;
 
-        if ($object->banned == "yes") {
-            return false;
-        }
-
         $return = array();
         foreach (self::$entity_fields as $field) {
             $return[$field] = $object->$field;
