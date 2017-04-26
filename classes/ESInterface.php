@@ -46,23 +46,28 @@ class ESInterface {
             'index' => array(
                 'analysis' => array(
                     'analyzer' => array(
-                        'analyzer_keyword' => array(
-                            'tokenizer' => 'keyword',
-                            'filter' => 'lowercase'
-                        ),
                         'edge_ngram_analyzer' => array(
                             'filter' => array(
                                 'lowercase',
+                                'asciifolding_filter',
                                 'edge_ngram_filter'
                             ),
                             'type' => 'custom',
                             'tokenizer' => 'standard'
+                        ),
+                        'keyword_analyzer' => array(
+                            'tokenizer' => 'keyword',
+                            'filter' => 'lowercase'
                         )
                     ),
                     'filter' => array(
+                        'asciifolding_filter' => array(
+                            'type' => 'asciifolding',
+                            'preserve_original' => true
+                        ),
                         'edge_ngram_filter' => array(
                             'type' => 'edge_ngram',
-                            'min_gram' => '3',
+                            'min_gram' => '1',
                             'max_gram' => '20'
                         )
                     ),
@@ -86,11 +91,11 @@ class ESInterface {
                 'time_created' => array('type' => 'integer'),
                 'time_updated' => array('type' => 'integer'),
                 'type' => array('type' => 'string', 'index' => 'not_analyzed'),
-                'tags' => array('type' => 'string', 'analyzer' => 'analyzer_keyword')
+                'tags' => array('type' => 'string', 'analyzer' => 'keyword_analyzer')
             )
         );
 
-        $types = array('group', 'object', 'site');
+        $types = array('group', 'site');
         foreach ($types as $type) {
             $return &= $this->client->indices()->putMapping(array(
                 'index' => $this->index,
@@ -101,21 +106,22 @@ class ESInterface {
             ));
         }
 
-        // Add title, description and comments field mapping to object
-        $mapping['properties']['title'] = array(
-            'type' => 'string',
-            'analyzer' => 'edge_ngram_analyzer',
-            'search_analyzer' => 'standard'
-        );
-        $mapping['properties']['description'] = array(
-            'type' => 'string',
-            'analyzer' => 'edge_ngram_analyzer',
-            'search_analyzer' => 'standard'
-        );
-        $mapping['properties']['comments'] = array(
-            'type' => 'string',
-            'analyzer' => 'edge_ngram_analyzer',
-            'search_analyzer' => 'standard'
+        $mapping = array(
+            'properties' => array(
+                'guid' => array('type' => 'integer'),
+                'owner_guid' => array('type' => 'integer'),
+                'access_id' => array('type' => 'integer'),
+                'site_guid' => array('type' => 'integer'),
+                'subtype' => array('type' => 'integer'),
+                'title' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
+                'description' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
+                'comments' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
+                'container_guid' => array('type' => 'integer'),
+                'time_created' => array('type' => 'integer'),
+                'time_updated' => array('type' => 'integer'),
+                'type' => array('type' => 'string', 'index' => 'not_analyzed'),
+                'tags' => array('type' => 'string', 'analyzer' => 'keyword_analyzer')
+            )
         );
 
         $type = 'object';
@@ -134,6 +140,7 @@ class ESInterface {
                 'access_id' => array('type' => 'integer'),
                 'site_guid' => array('type' => 'integer'),
                 'subtype' => array('type' => 'integer'),
+                'name' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
                 'email' => array('type' => 'string', 'index' => 'not_analyzed'),
                 'metadata' => array('type'=> 'nested', 'properties' => array(
                     'access_id' => array('type' => 'integer'),
@@ -143,7 +150,7 @@ class ESInterface {
                 'time_created' => array('type' => 'integer'),
                 'time_updated' => array('type' => 'integer'),
                 'type' => array('type' => 'string', 'index' => 'not_analyzed'),
-                'tags' => array('type' => 'string', 'analyzer' => 'analyzer_keyword')
+                'tags' => array('type' => 'string', 'analyzer' => 'keyword_analyzer')
             )
         );
 
@@ -164,7 +171,6 @@ class ESInterface {
                 'entity_guid' => array('type' => 'integer'),
                 'subtype' => array('type' => 'integer'),
                 'time_created' => array('type' => 'integer'),
-                'name' => array('type' => 'string', 'index' => 'not_analyzed'),
                 'type' => array('type' => 'string', 'index' => 'not_analyzed')
             )
         );
@@ -181,11 +187,11 @@ class ESInterface {
     }
 
     public function search($string, $search_type, $type, $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "", $container_guid = 0, $profile_fields = array(), $access_id = 0) {
+
         if ($search_type == 'tags') {
             $search_type = SEARCH_TAGS;
         } else {
             $search_type = SEARCH_DEFAULT;
-            $string = strtolower($string);
         }
 
         $query = new ESQuery($this->index, $search_type);

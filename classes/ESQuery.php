@@ -119,7 +119,7 @@ class ESQuery {
             default:
                 $this->params['body']['query']['bool']['minimum_should_match'] = 1;
                 $this->params['body']['query']['bool']['should'][] = array(
-                    'simple_query_string' => array(
+                    'query_string' => array(
                         'query' => $string,
                         'default_operator' => 'and',
                         'fields' => array(
@@ -137,7 +137,7 @@ class ESQuery {
 
                 if (!$this->type | $this->type == 'user') {
                     $must = array(
-                        array('simple_query_string' => array(
+                        array('query_string' => array(
                             'query' => $string,
                             'default_operator' => 'and',
                             'fields' => array(
