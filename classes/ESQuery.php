@@ -125,6 +125,7 @@ class ESQuery {
                         'fields' => array(
                             'title',
                             'description',
+                            'file_contents',
                             'comments',
                             'value',
                             'username',

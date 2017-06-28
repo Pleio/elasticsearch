@@ -10,6 +10,7 @@
     },
     "require": {
         "composer/installers": "^1.0.8",
-        "elasticsearch/elasticsearch": "~2.0"
+        "elasticsearch/elasticsearch": "~2.0",
+        "vaites/php-apache-tika": "^0.3.7"
     }
 }

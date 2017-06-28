@@ -115,6 +115,7 @@ class ESInterface {
                 'subtype' => array('type' => 'integer'),
                 'title' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
                 'description' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
+                'file_contents' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
                 'comments' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
                 'container_guid' => array('type' => 'integer'),
                 'time_created' => array('type' => 'integer'),
@@ -282,8 +283,8 @@ class ESInterface {
         );
     }
 
-    public function update($object) {
-        $object = $this->filter->apply($object);
+    public function update($input_object) {
+        $object = $this->filter->apply($input_object);
         if (!$object) {
             return true;
         }
@@ -303,11 +304,35 @@ class ESInterface {
 
         try {
             $this->client->index($params);
+
+            if (elgg_get_config("tika_server") && $input_object instanceof ElggFile) {
+                $taskhandler = PleioAsyncTaskhandler::get();
+                $taskhandler->schedule("elasticsearch_update_file_event", [$object["guid"]]);
+            }
         } catch (Exception $e) {
-            elgg_log('Elasticsearch update exception ' . $e->getMessage(), 'ERROR');
+            elgg_log("Elasticsearch update exception " . $e->getMessage(), "ERROR");
         }
 
         return true; // always return true, so Elgg's processes are not disturbed.
+    }
+
+    public function updateFileContents($object, $fileContents) {
+        $params = [
+            "index" => $this->index,
+            "type" => $object->type,
+            "id" => $object->guid,
+            "body" => [
+                "doc" => [
+                    "file_contents" => $fileContents
+                ]
+            ]
+        ];
+
+        try {
+            $this->client->update($params);
+        } catch (Exception $e) {
+            elgg_log('Elasticsearch update exception ' . $e->getMessage(), 'ERROR');
+        }
     }
 
     public function delete($object) {
