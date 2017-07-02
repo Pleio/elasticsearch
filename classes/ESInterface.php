@@ -380,10 +380,10 @@ class ESInterface {
     public function bulk(array $objects) {
         $params = array();
         $params['body'] = array();
+        $files = array();
 
-        foreach ($objects as $object) {
-
-            $object = $this->filter->apply($object);
+        foreach ($objects as $input_object) {
+            $object = $this->filter->apply($input_object);
             if (!$object) {
                 continue;
             }
@@ -392,6 +392,10 @@ class ESInterface {
                 $id = $object['id'];
             } else {
                 $id = $object['guid'];
+            }
+
+            if ($input_object instanceof ElggFile) {
+                $files[] = $input_object;
             }
 
             $params['body'][] =  array(
@@ -405,7 +409,19 @@ class ESInterface {
             $params['body'][] = $object;
         }
 
-        return $this->client->bulk($params);
+        try {
+            $this->client->bulk($params);
+
+            if (elgg_get_config("tika_server") && count($files) > 0) {
+                foreach ($files as $file) {
+                    $taskhandler = PleioAsyncTaskhandler::get();
+                    $taskhandler->schedule("elasticsearch_update_file_event", [$file->guid]);
+                }
+            }
+        } catch (Exception $e) {
+            elgg_log("Elasticsearch bulk exception " . $e->getMessage(), "ERROR");
+        }
+
     }
 
 }
