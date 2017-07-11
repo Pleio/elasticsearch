@@ -76,7 +76,7 @@ class ESFilter {
         $subtype = get_subtype_from_id($object->subtype);
 
         // do not index specific types of content
-        if (in_array($subtype, array('messages','plugin','widget','custom_profile_field','custom_profile_field_category','reported_content','custom_group_field','custom_profile_type','gruop_widget','multi_dashboard','comment', 'answer'))) {
+        if (in_array($subtype, array('messages','plugin','widget','custom_profile_field','custom_profile_field_category','reported_content','custom_group_field','custom_profile_type','gruop_widget','multi_dashboard','comment', 'answer', 'menu_builder_menu_item'))) {
             return false;
         }
 
