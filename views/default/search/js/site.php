@@ -38,14 +38,12 @@ elgg.search_advanced.init = function() {
                 return false;
             },
             select: function( event, ui ) {
-                if(ui.item.type == "placeholder"){
-                    return false;
-                } else if(ui.item.href){
+                if(ui.item.type !== "placeholder" && ui.item.href){
                     document.location.href = ui.item.href;
                 } else {
-                    this.value = ui.item.value;
+                    event.preventDefault();
+                    $(this).parents("form").submit();
                 }
-                return false;
             },
             autoFocus: true
         }).data( "autocomplete" )._renderItem = function( ul, item ) {
