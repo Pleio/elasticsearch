@@ -44,6 +44,9 @@ function elasticsearch_init() {
 
     elgg_register_action("elasticsearch/settings/save", dirname(__FILE__) . "/actions/plugins/settings/save.php", "admin");
 
+    elgg_register_action("elasticsearch/reset_index", dirname(__FILE__) . "/actions/reset_index.php", "admin");
+    elgg_register_action("elasticsearch/sync_all", dirname(__FILE__) . "/actions/sync_all.php", "admin");
+
     elgg_extend_view('css/elgg', 'search/css/site');
     elgg_extend_view('js/elgg', 'search/js/site');
 

@@ -3,11 +3,16 @@
 $english = array(
     'elasticsearch:results' => 'Results for %s',
     'elasticsearch:nr_results' => '%s results found for %s',
-
     'elasticsearch:bulk_sync' => 'Bulk sync',
     'elasticsearch:settings:title' => 'Elasticsearch settings',
-    'elasticsearch:settings:enabled' => 'Enabled',
+    'elasticsearch:settings:management' => 'Management',
+    'elasticsearch:reset_index' => 'Reset index',
+    'elasticsearch:sync_all' => 'Sync all',
+    'elasticsearch:all_synced' => 'All content is synced correctly.',
     'elasticsearch:settings:profile_fields' => 'Configure searchable profile fields',
+    'elasticsearch:could_not_create_mapping' => 'Could not create mapping',
+    'elasticsearch:could_not_reset_index' => 'Could not reset index',
+    'elasticsearch:index_and_mapping_created' => 'Index and mapping succesfully created',
 
     'item:comment' => 'Comment',
     'item:group' => 'Group',

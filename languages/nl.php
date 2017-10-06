@@ -3,11 +3,16 @@
 $dutch = array(
     'elasticsearch:results' => 'Resultaten voor %s',
     'elasticsearch:nr_results' => '%s resultaten gevonden voor %s',
-
     'elasticsearch:bulk_sync' => 'Bulk sync',
     'elasticsearch:settings:title' => 'Elasticsearch instellingen',
-    'elasticsearch:settings:enabled' => 'Geactiveerd',
+    'elasticsearch:settings:management' => 'Beheer',
+    'elasticsearch:reset_index' => 'Index resetten',
+    'elasticsearch:sync_all' => 'Synchroniseer alles',
+    'elasticsearch:all_synced' => 'Alle content is juist gesynchroniseerd.',
     'elasticsearch:settings:profile_fields' => 'Configureer zoekbare profielvelden',
+    'elasticsearch:could_not_create_mapping' => 'Kan de mapping niet aanmaken',
+    'elasticsearch:could_not_reset_index' => 'Kan de index niet aanmaken',
+    'elasticsearch:index_and_mapping_created' => 'Index en maping succesvol aangemaakt',
 
     'item:comment' => 'Reactie',
     'item:group' => 'Groep',
