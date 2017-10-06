@@ -74,9 +74,12 @@ class ESFilter {
         $dbprefix = $CONFIG->dbprefix;
 
         $subtype = get_subtype_from_id($object->subtype);
+        if (!$subtype) {
+            return false;
+        }
 
         // do not index specific types of content
-        if (in_array($subtype, array('messages','plugin','widget','custom_profile_field','custom_profile_field_category','reported_content','custom_group_field','custom_profile_type','gruop_widget','multi_dashboard','comment', 'answer', 'menu_builder_menu_item'))) {
+        if (in_array($subtype, array('messages','plugin','widget','custom_profile_field','custom_profile_field_category','reported_content','custom_group_field','custom_profile_type','group_widget','multi_dashboard','comment', 'answer', 'menu_builder_menu_item'))) {
             return false;
         }
 
@@ -89,8 +92,10 @@ class ESFilter {
             $return["subtype"] = get_subtype_id("object", "page");
         }
 
+        $owner = $object->getOwnerEntity();
+
         $return['title'] = html_entity_decode($object->title);
-        $return['description'] = html_entity_decode(elgg_strip_tags($object->description)); // remove HTML
+        $return['description'] = html_entity_decode(elgg_strip_tags($owner->name . " " . $object->description)); // remove HTML
         $return['tags'] = $this->getTags($object);
 
         if (in_array($subtype, array('question', 'cafe', 'news', 'blog'))) {

@@ -121,7 +121,7 @@ class ESInterface {
                 'time_created' => array('type' => 'integer'),
                 'time_updated' => array('type' => 'integer'),
                 'type' => array('type' => 'string', 'index' => 'not_analyzed'),
-                'tags' => array('type' => 'string', 'analyzer' => 'keyword_analyzer')
+                'tags' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard')
             )
         );
 
@@ -151,7 +151,7 @@ class ESInterface {
                 'time_created' => array('type' => 'integer'),
                 'time_updated' => array('type' => 'integer'),
                 'type' => array('type' => 'string', 'index' => 'not_analyzed'),
-                'tags' => array('type' => 'string', 'analyzer' => 'keyword_analyzer')
+                'tags' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard')
             )
         );
 
