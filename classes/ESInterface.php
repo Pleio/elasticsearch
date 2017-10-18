@@ -113,7 +113,7 @@ class ESInterface {
                 'access_id' => array('type' => 'integer'),
                 'site_guid' => array('type' => 'integer'),
                 'subtype' => array('type' => 'integer'),
-                'title' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
+                'title' => array('boost' => 2, 'type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
                 'description' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
                 'file_contents' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
                 'comments' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
@@ -141,7 +141,7 @@ class ESInterface {
                 'access_id' => array('type' => 'integer'),
                 'site_guid' => array('type' => 'integer'),
                 'subtype' => array('type' => 'integer'),
-                'name' => array('type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
+                'name' => array('boost' => 2, 'type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
                 'email' => array('type' => 'string', 'index' => 'not_analyzed'),
                 'metadata' => array('type'=> 'nested', 'properties' => array(
                     'access_id' => array('type' => 'integer'),
