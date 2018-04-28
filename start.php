@@ -59,13 +59,23 @@ function elasticsearch_init() {
 
     elgg_register_plugin_hook_handler("route", "groups", "elasticsearch_groups_hook", 100);
 
-    elgg_unregister_plugin_hook_handler("search", "user", "search_users_hook");
-    elgg_unregister_plugin_hook_handler("search", "user", "search_advanced_users_hook");
-    elgg_register_plugin_hook_handler("search", "user", "elasticsearch_search_user_hook_handler");
-
+    elgg_unregister_plugin_hook_handler("search", "object", "search_objects_hook");
+	elgg_unregister_plugin_hook_handler("search", "user", "search_users_hook");
+    elgg_unregister_plugin_hook_handler("search", "group", "search_groups_hook");
     elgg_unregister_plugin_hook_handler("search", "tags", "search_tags_hook");
+    elgg_unregister_plugin_hook_handler("search", "comments", "search_comments_hook");
+
+    elgg_unregister_plugin_hook_handler("search", "object", "search_advanced_objects_hook");
+    elgg_unregister_plugin_hook_handler("search", "user", "search_advanced_users_hook");
+    elgg_unregister_plugin_hook_handler("search", "group", "search_advanced_groups_hook");
     elgg_unregister_plugin_hook_handler("search", "tags", "search_advanced_tags_hook");
+    elgg_unregister_plugin_hook_handler("search", "comments", "search_advanced_comments_hook");
+
+    elgg_register_plugin_hook_handler("search", "object", "elasticsearch_search_object_hook_handler");
+    elgg_register_plugin_hook_handler("search", "user", "elasticsearch_search_user_hook_handler");
+    elgg_register_plugin_hook_handler("search", "group", "elasticsearch_search_group_hook_handler");
     elgg_register_plugin_hook_handler("search", "tags", "elasticsearch_search_tags_hook_handler");
+    elgg_register_plugin_hook_handler("search", "comments", "elasticsearch_search_comments_hook_handler");
 
     if (function_exists('pleio_register_console_handler')) {
         pleio_register_console_handler('es:index:reset', 'Reset the configured Elasticsearch index.', 'elasticsearch_console_index_reset');
@@ -75,10 +85,34 @@ function elasticsearch_init() {
 
 elgg_register_event_handler("init", "system", "elasticsearch_init");
 
+function elasticsearch_search_object_hook_handler($hook, $type, $return_value, $params) {
+    $limit = $params["limit"] ? $params["limit"] : 10;
+    $offset = $params["offset"] ? $params["offset"] : 0;
+    $query = $params["query"];
+
+    $results = ESInterface::get()->search(
+        $params["query"],
+        SEARCH_TAGS,
+        "object",
+        [],
+        $params["limit"],
+        $params["offset"],
+        null,
+        null,
+        null,
+        null
+    );
+
+    return [
+        "count" => $results["count"],
+        "entities" => $results["hits"]
+    ];
+}
+
 function elasticsearch_search_user_hook_handler($hook, $type, $return_value, $params) {
     $limit = $params["limit"] ? $params["limit"] : 10;
     $offset = $params["offset"] ? $params["offset"] : 0;
-    $query = $params["$query"];
+    $query = $params["query"];
 
     $profile_filter = [];
     foreach ($params["profile_filter"] as $key => $value) {
@@ -106,12 +140,47 @@ function elasticsearch_search_user_hook_handler($hook, $type, $return_value, $pa
     ];
 }
 
+function elasticsearch_search_group_hook_handler($hook, $type, $return_value, $params) {
+    $limit = $params["limit"] ? $params["limit"] : 10;
+    $offset = $params["offset"] ? $params["offset"] : 0;
+    $query = $params["query"];
+
+    $results = ESInterface::get()->search(
+        $query,
+        SEARCH_TAGS,
+        "group"
+    );
+
+    return [
+        "count" => $results["count"],
+        "entities" => $results["hits"]
+    ];
+}
+
+function elasticsearch_search_comments_hook_handler($hook, $type, $return_value, $params) {
+    $limit = $params["limit"] ? $params["limit"] : 10;
+    $offset = $params["offset"] ? $params["offset"] : 0;
+    $query = $params["query"];
+
+    return [
+        "count" => 0,
+        "entities" => []
+    ];
+}
+
 function elasticsearch_search_tags_hook_handler($hook, $type, $return_value, $params) {
     $limit = $params["limit"] ? $params["limit"] : 10;
     $offset = $params["offset"] ? $params["offset"] : 0;
-    $query = $params["$query"];
+    $query = $params["query"];
 
-    $results = ESInterface::get()->search($params["query"], SEARCH_TAGS, "object", [], $params["limit"], $params["offset"]);
+    $results = ESInterface::get()->search(
+        $params["query"],
+        SEARCH_TAGS,
+        "object",
+        [],
+        $params["limit"],
+        $params["offset"]
+    );
 
     return [
         "count" => $results["count"],
