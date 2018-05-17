@@ -99,12 +99,26 @@ function elasticsearch_search_object_hook_handler($hook, $type, $return_value, $
         $params["offset"],
         null,
         null,
-        null,
+        $params["container_guid"],
         null
     );
 
+    if ($params["type"]) {
+        if ($params["subtype"]) {
+            if (array_key_exists($params["subtype"], $results["count_per_subtype"])) {
+                $count = $results["count_per_subtype"][$params["subtype"]];
+            }
+        } else {
+
+            exit();
+            if (array_key_exists($params["type"], $results["count_per_type"])) {
+                $count = $results["count_per_subtype"][$params["type"]];
+            }
+        }
+    }
+
     return [
-        "count" => $results["count"],
+        "count" => $count,
         "entities" => $results["hits"]
     ];
 }
