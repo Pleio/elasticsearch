@@ -93,8 +93,8 @@ function elasticsearch_search_object_hook_handler($hook, $type, $return_value, $
     $results = ESInterface::get()->search(
         $params["query"],
         SEARCH_TAGS,
-        "object",
-        [],
+        $params["type"],
+        [$params["subtype"]],
         $params["limit"],
         $params["offset"],
         null,
@@ -109,8 +109,6 @@ function elasticsearch_search_object_hook_handler($hook, $type, $return_value, $
                 $count = $results["count_per_subtype"][$params["subtype"]];
             }
         } else {
-
-            exit();
             if (array_key_exists($params["type"], $results["count_per_type"])) {
                 $count = $results["count_per_subtype"][$params["type"]];
             }
