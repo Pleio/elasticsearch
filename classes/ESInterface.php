@@ -68,7 +68,7 @@ class ESInterface {
                         'edge_ngram_filter' => array(
                             'type' => 'edge_ngram',
                             'min_gram' => '1',
-                            'max_gram' => '25'
+                            'max_gram' => '30'
                         )
                     ),
                 )
