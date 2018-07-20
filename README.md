@@ -1,5 +1,5 @@
 # An Elasticsearch integration for Elgg
-This plugin adds full-text search capabilities to your Elgg installation, allowing you to search through entities and annotations (in ELGG 1.8). It replaces the search_advanced plugin.
+This plugin adds full-text search capabilities to your Elgg installation, allowing you to search through entities and annotations (in ELGG 1.8).
 
 ## Installation and configuration
 1. Install the plugin (and it's dependencies) by running:
