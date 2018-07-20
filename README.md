@@ -16,7 +16,7 @@ This plugin adds full-text search capabilities to your Elgg installation, allowi
 
         $CONFIG->elasticsearch_index = 'pleio-dev';
 
-3. Activate the plugin through the Elgg admin panel, make sure you deactivated the search and search_advanced plugin.
+3. Activate the plugin through the Elgg admin panel.
 4. Create the index and mappings in Elasticsearch by running:
 
         php console.php es:index:reset
