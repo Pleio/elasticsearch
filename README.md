@@ -35,15 +35,15 @@ It is also possible to use this tool in conjunction with PleioAsyncTaskHandler a
 
 1. Download and run the tika-server:
 
-    wget http://www.apache.org/dyn/closer.cgi/tika/tika-server-1.15.jar
-    java -jar tika-server-1.15.jar
+        wget http://www.apache.org/dyn/closer.cgi/tika/tika-server-1.15.jar
+        java -jar tika-server-1.15.jar
 
 2. Add the following configuration to engine/settings.php:
 
-    $CONFIG->tika_server = ["localhost", 9998];
+        $CONFIG->tika_server = ["localhost", 9998];
 
 3. Make sure the PleioAsyncTaskHandler is running by:
 
-    php console.php async:taskhandler
+        php console.php async:taskhandler
 
 Now when files are added or updated, the contents are indexed automatically.
