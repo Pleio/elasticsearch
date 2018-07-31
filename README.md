@@ -1,5 +1,5 @@
 # An Elasticsearch integration for Elgg
-This plugin adds full-text search capabilities to your Elgg installation, allowing you to search through entities and annotations (in ELGG 1.8). It replaces the search_advanced plugin.
+This plugin adds full-text search capabilities to your Elgg installation, allowing you to search through entities and annotations (in ELGG 1.8).
 
 ## Installation and configuration
 1. Install the plugin (and it's dependencies) by running:
@@ -16,7 +16,7 @@ This plugin adds full-text search capabilities to your Elgg installation, allowi
 
         $CONFIG->elasticsearch_index = 'pleio-dev';
 
-3. Activate the plugin through the Elgg admin panel, make sure you deactivated the search and search_advanced plugin.
+3. Activate the plugin through the Elgg admin panel.
 4. Create the index and mappings in Elasticsearch by running:
 
         php console.php es:index:reset
@@ -35,15 +35,15 @@ It is also possible to use this tool in conjunction with PleioAsyncTaskHandler a
 
 1. Download and run the tika-server:
 
-    wget http://www.apache.org/dyn/closer.cgi/tika/tika-server-1.15.jar
-    java -jar tika-server-1.15.jar
+        wget http://www.apache.org/dyn/closer.cgi/tika/tika-server-1.15.jar
+        java -jar tika-server-1.15.jar
 
 2. Add the following configuration to engine/settings.php:
 
-    $CONFIG->tika_server = ["localhost", 9998];
+        $CONFIG->tika_server = ["localhost", 9998];
 
 3. Make sure the PleioAsyncTaskHandler is running by:
 
-    php console.php async:taskhandler
+        php console.php async:taskhandler
 
 Now when files are added or updated, the contents are indexed automatically.
