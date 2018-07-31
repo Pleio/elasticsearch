@@ -159,8 +159,11 @@ function elasticsearch_search_group_hook_handler($hook, $type, $return_value, $p
 
     $results = ESInterface::get()->search(
         $query,
-        SEARCH_TAGS,
-        "group"
+        SEARCH_DEFAULT,
+        "group",
+        [],
+        $params["limit"],
+        $params["offset"]
     );
 
     return [
