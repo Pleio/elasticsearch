@@ -187,7 +187,7 @@ class ESInterface {
         return $return;
     }
 
-    public function search($string, $search_type, $type, $subtypes = array(), $limit = 10, $offset = 0, $sort = "", $order = "", $container_guid = 0, $profile_fields = array(), $access_id = 0) {
+    public function search($string, $search_type, $type, $subtypes = array(), $limit = 10, $offset = 0, $sort = "relevance", $order = "asc", $container_guid = 0, $profile_fields = array(), $access_id = 0) {
 
         if ($search_type == 'tags') {
             $search_type = SEARCH_TAGS;
@@ -203,11 +203,7 @@ class ESInterface {
             $query->filterType($type);
         }
 
-        if ($sort && $sort !== "relevance") {
-            if (!$order) {
-                $order = "asc";
-            }
-
+        if ($sort !== "relevance") {
             $query->setSort($sort, $order);
         }
 

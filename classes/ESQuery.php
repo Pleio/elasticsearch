@@ -31,11 +31,6 @@ class ESQuery {
             );
         }
 
-        //@todo: implement $sort and $order
-        $this->params['body']['sort'] = array(
-            'time_updated' => 'desc'
-        );
-
         $this->params['body']['aggregations'] = array();
         $this->params['body']['aggregations']['type']['terms'] = array(
             'field' => '_type'
@@ -45,7 +40,7 @@ class ESQuery {
         );
     }
 
-    public function setSort($sort, $order = "desc") {
+    public function setSort($sort, $order = "asc") {
         $this->params['body']['sort'] = array(
             $sort => $order
         );
