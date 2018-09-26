@@ -203,7 +203,7 @@ class ESInterface {
             $query->filterType($type);
         }
 
-        if ($sort !== "relevance") {
+        if ($sort !== "relevance" && $sort && $order) {
             $query->setSort($sort, $order);
         }
 
