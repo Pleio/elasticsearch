@@ -59,24 +59,6 @@ if (function_exists('mb_convert_encoding')) {
 }
 $display_query = htmlspecialchars($display_query, ENT_QUOTES, 'UTF-8', false);
 
-// check that we have an actual query
-if (!$query && !((count($profile_filter) > 0) && $entity_type == "user")) {
-    $title = sprintf(elgg_echo('search:results'), "\"$display_query\"");
-
-    $body  = elgg_view_title(elgg_echo('search:search_error'));
-    if(!elgg_is_xhr()){
-        $body .= elgg_view_form("elasticsearch/search", array("action" => "search", "method" => "GET", "disable_security" => true), array());
-    }
-
-    $body .= elgg_echo('search:no_query');
-    if(!elgg_is_xhr()){
-        $layout = elgg_view_layout('one_sidebar', array('content' => $body));
-        $body = elgg_view_page($title, $layout);
-    }
-    echo $body;
-    return;
-}
-
 $results = ESInterface::get()->search(
     $query,
     $search_type,

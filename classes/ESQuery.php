@@ -103,6 +103,9 @@ class ESQuery {
     }
 
     public function search($string) {
+        if (!$string)
+            return $this->params;
+
         switch ($this->searchtype) {
             case SEARCH_TAGS:
                 $this->params['body']['query']['bool']['must'][] = array(
