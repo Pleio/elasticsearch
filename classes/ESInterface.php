@@ -211,7 +211,11 @@ class ESInterface {
             $search_subtypes = array();
             if (is_array($subtypes)) {
                 foreach ($subtypes as $subtype) {
-                    $search_subtypes[] = get_subtype_id('object', $subtype);
+                    if ($subtype === 'user' || $subtype === 'group') {
+                        $search_subtypes[] = 0;
+                    } else {
+                        $search_subtypes[] = get_subtype_id('object', $subtype);
+                    }
                 }
             } else {
                 $search_subtypes[] = get_subtype_id('object', $subtypes);
