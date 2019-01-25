@@ -29,6 +29,10 @@ class ESInterface {
         $this->index = $CONFIG->elasticsearch_index;
 
         $this->filter = new ESFilter();
+
+        if(isset($CONFIG->celery)) {
+            $this->celery = new \Celery($CONFIG->celery["host"], $CONFIG->celery["login"], $CONFIG->celery["password"], $CONFIG->celery["vhost"]);
+        }
     }
 
     private function __clone() {}
@@ -311,12 +315,25 @@ class ESInterface {
         $params['body'] = $object;
 
         try {
-            $this->client->index($params);
+            if ($this->celery) {
 
-            if (elgg_get_config("tika_server") && $input_object instanceof ElggFile) {
-                $taskhandler = PleioAsyncTaskhandler::get();
-                $taskhandler->schedule("elasticsearch_update_file_event", [$object["guid"]]);
+                if ($input_object instanceof ElggFile) {
+
+                    $ia = elgg_set_ignore_access(true);
+                    $filename = $input_object->getFilenameOnFilestore();
+                    elgg_set_ignore_access($ia);
+
+                    if ($filename) {
+                        $params['body']['file'] = $filename;
+                    }
+                }
+
+                $this->celery->PostTask('elasticsearch.update', $params);
+
+            } else {
+                $this->client->index($params);
             }
+
         } catch (Exception $e) {
             elgg_log("Elasticsearch update exception " . $e->getMessage(), "ERROR");
         }
@@ -324,6 +341,7 @@ class ESInterface {
         return true; // always return true, so Elgg's processes are not disturbed.
     }
 
+    /*
     public function updateFileContents($object, $fileContents) {
         $params = [
             "index" => $this->index,
@@ -341,7 +359,7 @@ class ESInterface {
         } catch (Exception $e) {
             elgg_log('Elasticsearch update exception ' . $e->getMessage(), 'ERROR');
         }
-    }
+    }*/
 
     public function delete($object) {
         $object = $this->filter->apply($object);
@@ -361,7 +379,11 @@ class ESInterface {
         $params['id'] = $id;
 
         try {
-            $this->client->delete($params);
+            if ($this->celery) {
+                $this->celery->PostTask('elasticsearch.delete', $params);
+            } else {
+                $this->client->delete($params);
+            }
         } catch (Exception $e) {}
 
         return true; // always return true, so Elgg's processes are not disturbed.
@@ -388,7 +410,6 @@ class ESInterface {
     public function bulk(array $objects) {
         $params = array();
         $params['body'] = array();
-        $files = array();
 
         foreach ($objects as $input_object) {
             $object = $this->filter->apply($input_object);
@@ -402,8 +423,15 @@ class ESInterface {
                 $id = $object['guid'];
             }
 
-            if ($input_object instanceof ElggFile) {
-                $files[] = $input_object;
+
+            if ($this->celery && $input_object instanceof ElggFile) {
+                $ia = elgg_set_ignore_access(true);
+                $filename = $input_object->getFilenameOnFilestore();
+                elgg_set_ignore_access($ia);
+
+                if ($filename) {
+                    $object['file'] = $filename;
+                }
             }
 
             $params['body'][] =  array(
@@ -418,13 +446,10 @@ class ESInterface {
         }
 
         try {
-            $this->client->bulk($params);
-
-            if (elgg_get_config("tika_server") && count($files) > 0) {
-                foreach ($files as $file) {
-                    $taskhandler = PleioAsyncTaskhandler::get();
-                    $taskhandler->schedule("elasticsearch_update_file_event", [$file->guid]);
-                }
+            if ($this->celery) {
+                $this->celery->PostTask('elasticsearch.bulk', $params);
+            } else {
+                $this->client->bulk($params);
             }
         } catch (Exception $e) {
             elgg_log("Elasticsearch bulk exception " . $e->getMessage(), "ERROR");
