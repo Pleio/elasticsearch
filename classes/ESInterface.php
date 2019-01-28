@@ -31,7 +31,9 @@ class ESInterface {
         $this->filter = new ESFilter();
 
         if(isset($CONFIG->celery)) {
-            $this->celery = new \Celery($CONFIG->celery["host"], $CONFIG->celery["login"], $CONFIG->celery["password"], $CONFIG->celery["vhost"]);
+            try {
+                $this->celery = new \Celery($CONFIG->celery["host"], $CONFIG->celery["login"], $CONFIG->celery["password"], $CONFIG->celery["vhost"]);
+            } catch (Exception $e) {}
         }
     }
 
