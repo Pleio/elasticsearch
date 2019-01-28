@@ -212,13 +212,21 @@ class ESInterface {
             if (is_array($subtypes)) {
                 foreach ($subtypes as $subtype) {
                     if ($subtype === 'user' || $subtype === 'group') {
-                        $search_subtypes[] = 0;
+                        if (!in_array(0, $search_subtypes)) {
+                            $search_subtypes[] = 0;
+                        }
                     } else {
-                        $search_subtypes[] = get_subtype_id('object', $subtype);
+                        $subtype_id = get_subtype_id('object', $subtype);
+                        if ($subtype_id && !in_array($subtype_id, $search_subtypes)) {
+                            $search_subtypes[] = $subtype_id;
+                        }
                     }
                 }
             } else {
-                $search_subtypes[] = get_subtype_id('object', $subtypes);
+                $subtype_id = get_subtype_id('object', $subtypes);
+                if ($subtype_id) {
+                    $search_subtypes[] = $subtype_id;
+                }
             }
 
             $query->filterSubtypes($search_subtypes);
