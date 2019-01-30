@@ -9,6 +9,7 @@ $english = array(
     'elasticsearch:reset_index' => 'Reset index',
     'elasticsearch:sync_all' => 'Sync all',
     'elasticsearch:all_synced' => 'All content is synced correctly.',
+    'elasticsearch:sync:started_in_background' => 'Content synchronisation is started in the background.',
     'elasticsearch:settings:profile_fields' => 'Configure searchable profile fields',
     'elasticsearch:could_not_create_mapping' => 'Could not create mapping',
     'elasticsearch:could_not_reset_index' => 'Could not reset index',

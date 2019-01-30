@@ -1,12 +1,6 @@
 <?php
-global $CONFIG;
-$CONFIG->memcache = false;
+pleio_schedule_in_background("elasticsearch_console_sync_all", []);
 
-ini_set("memory_limit", "1024M");
-set_time_limit(0);
+system_message(elgg_echo("elasticsearch:sync:started_in_background"));
 
-$interface = ESInterface::get();
-$bulksync = new ESBulkSync($interface);
-$bulksync->sync();
-
-system_message(elgg_echo("elasticsearch:all_synced"));
+forward(REFERER);

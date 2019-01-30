@@ -9,6 +9,7 @@ $dutch = array(
     'elasticsearch:reset_index' => 'Index resetten',
     'elasticsearch:sync_all' => 'Synchroniseer alles',
     'elasticsearch:all_synced' => 'Alle content is juist gesynchroniseerd.',
+    'elasticsearch:sync:started_in_background' => 'Content synchronisatie is op de achtergrond gestart.',
     'elasticsearch:settings:profile_fields' => 'Configureer zoekbare profielvelden',
     'elasticsearch:could_not_create_mapping' => 'Kan de mapping niet aanmaken',
     'elasticsearch:could_not_reset_index' => 'Kan de index niet aanmaken',
