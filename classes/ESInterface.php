@@ -30,10 +30,17 @@ class ESInterface {
 
         $this->filter = new ESFilter();
 
-        if(isset($CONFIG->celery)) {
+        if(isset($CONFIG->amqp_host)) {
             try {
-                $this->celery = new \Celery($CONFIG->celery["host"], $CONFIG->celery["login"], $CONFIG->celery["password"], $CONFIG->celery["vhost"]);
-            } catch (Exception $e) {}
+                $this->celery = new \Celery(
+                    $CONFIG->amqp_host,
+                    $CONFIG->amqp_user,
+                    $CONFIG->amqp_pass,
+                    $CONFIG->amqp_vhost
+                );
+            } catch (Exception $e) {
+                elgg_log('Elasticsearch celery exception ' . $e->getMessage(), 'ERROR');
+            }
         }
     }
 
@@ -342,26 +349,6 @@ class ESInterface {
 
         return true; // always return true, so Elgg's processes are not disturbed.
     }
-
-    /*
-    public function updateFileContents($object, $fileContents) {
-        $params = [
-            "index" => $this->index,
-            "type" => $object->type,
-            "id" => $object->guid,
-            "body" => [
-                "doc" => [
-                    "file_contents" => $fileContents
-                ]
-            ]
-        ];
-
-        try {
-            $this->client->update($params);
-        } catch (Exception $e) {
-            elgg_log('Elasticsearch update exception ' . $e->getMessage(), 'ERROR');
-        }
-    }*/
 
     public function delete($object) {
         $object = $this->filter->apply($object);
