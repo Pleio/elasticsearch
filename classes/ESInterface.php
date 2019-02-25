@@ -154,7 +154,7 @@ class ESInterface {
                 'access_id' => array('type' => 'integer'),
                 'site_guid' => array('type' => 'integer'),
                 'subtype' => array('type' => 'integer'),
-                'name' => array('boost' => 5, 'type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard'),
+                'name' => array('boost' => 5, 'type' => 'string', 'analyzer' => 'edge_ngram_analyzer', 'search_analyzer' => 'standard', 'fields' => array('raw' => array('type' => 'string', 'index' => 'not_analyzed'))),
                 'email' => array('type' => 'string', 'index' => 'not_analyzed'),
                 'metadata' => array('type'=> 'nested', 'properties' => array(
                     'access_id' => array('type' => 'integer'),
