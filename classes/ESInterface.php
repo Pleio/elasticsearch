@@ -212,6 +212,8 @@ class ESInterface {
         $query->setOffset($offset);
         $query->setLimit($limit);
 
+        $search_type = $type;
+
         if ($type) {
             $query->filterType($type);
         }
@@ -296,10 +298,23 @@ class ESInterface {
             }
         }
 
+        $count_per_metadata_name = array();
+
+        if ($search_type === 'user') {
+            foreach ($results['aggregations']['nesting']['names']['buckets'] as $name) {
+                $key = $name['key'];
+                $values = array();
+                foreach ($name['values']['buckets'] as $value){
+                    $values[] = array('key' => $value['key'], 'count' => $value['doc_count']);
+                }
+                $count_per_metadata_name[$key] = $values;
+            }
+        }
         return array(
             'count' => $results['hits']['total'],
             'count_per_type' => $count_per_type,
             'count_per_subtype' => $count_per_subtype,
+            'count_per_metadata_name' => $count_per_metadata_name,
             'hits' => $hits
         );
     }

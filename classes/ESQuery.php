@@ -103,6 +103,13 @@ class ESQuery {
     }
 
     public function search($string) {
+        if (!$this->type | $this->type == 'user') {
+            $this->params['body']['aggregations']['nesting'] = array(
+                'nested' => array('path' => 'metadata'),
+                'aggs' => array('names' => array('terms' => array('field' => 'metadata.name', 'size' => 0), 'aggs' => array('values' => array('terms' => array('field' => 'metadata.value', 'size' => 0)))))
+            );
+        }
+
         if (!$string)
             return $this->params;
 
@@ -144,6 +151,7 @@ class ESQuery {
                             )
                         ))
                     );
+
 
                     if ($this->access_array) {
                         $must[] = array('terms' => array('metadata.access_id' => $this->access_array));
